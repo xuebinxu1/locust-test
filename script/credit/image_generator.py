@@ -51,3 +51,9 @@ def get_image_base64(text):
     return base64_str.decode()
 
 
+def get_image_bytes(text):
+    image = get_image(text)
+    output_buffer = BytesIO()
+    image.save(output_buffer, format='JPEG')
+    byte_data = output_buffer.getvalue()
+    return byte_data
