@@ -36,10 +36,10 @@ class WebsiteTasks(TaskSequence):
         模拟魔蝎运营商数据请求
         :return:
         """
-        print("moxie carrier request")
-
-        payload = dict(eventId=self.event_id, result=data)
-        self.client.get("/", payload)
+        # print("moxie carrier request")
+        #
+        # payload = dict(eventId=self.event_id, result=data)
+        # self.client.get("/", params=payload)
 
     @seq_task(3)
     @task(1)
@@ -113,7 +113,7 @@ class WebUserLocust(HttpLocust):
     task_set = WebsiteTasks
     min_wait = 100
     max_wait = 200
-    host = 'http://localhost:20997/rum/test'
+    host = 'http://10.10.10.200:20997/rum/test'
 
     def get_count(self):
         """
