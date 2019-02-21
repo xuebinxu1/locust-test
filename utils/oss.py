@@ -19,5 +19,5 @@ def download_file(key_name):
     return client.get_object(key_name)
 
 
-def generate_url(key_name, expire=300):
-    return client.sign_url(method='PUT', key=key_name, expires=expire)
+# def generate_url(key_name, expire=300):
+#     return client.sign_url(method='PUT', key=key_name, expires=expire)

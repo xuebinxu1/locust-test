@@ -1,6 +1,8 @@
 import random
 from datetime import timedelta, date
 import datetime
+import requests
+import json
 
 codelist = ['330225', '330202']
 
@@ -37,3 +39,10 @@ def get_check_digit(id_number):
 
 
 print(generate())
+# company_id = "1"
+# channel_id = "0"
+# header = {"token": "008e714a090b9f5c9e9620ac26db278a973016909589eeafc6a60e4d83893d39"}
+# data = dict(companyId=company_id, channelId=channel_id, mobile='13700000001', eventId='1_0_13700000001_1550127129817')
+# response_dict = json.loads(requests.get(url='http://localhost:6100/icewine/bankcard/list', headers=header,
+#                                         params=data).content)
+# print(response_dict)

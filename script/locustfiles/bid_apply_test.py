@@ -10,8 +10,11 @@ import json
 import utils.oss as oss
 import config.constant as constant
 import script.credit.image_generator as image_generator
-from script.credit.cid_generator import generate
+from script.credit.cid_generator import generate as cid_generate
+from script.credit.bankcard_generator import generate as bankcard_generate
 from script.credit.moxie_data import data as moxie_data
+from script.credit.youdun_data import get_youdun_recognization
+from script.credit.sdk_data import data as sdk_data
 from locust import HttpLocust, TaskSequence, task, seq_task
 
 counter = 0
@@ -34,13 +37,14 @@ class WebsiteTasks(TaskSequence):
         self.client.headers.update(header)
         vcode_response = self.client.post('/user/login/vcode', vcode_req_body)
         vcode_response_dict = json.loads(vcode_response.content)
+        print("get vcode response: ", vcode_response_dict)
 
-        if vcode_response.status_code != 200:
+        if vcode_response.status_code != 200 and vcode_response_dict['code'] != '200':
             vcode_response.failure("get vcode failed")
+            self.interrupt()
         else:
             self.vcode = "0123"
             self.event_id = vcode_response_dict['data']['eventId']
-            print("get vcode response: ", vcode_response_dict)
 
         # 登陆
         login_req_body = dict(mobile=self.mobile, companyId=company_id, channelId=channel_id,
@@ -53,6 +57,7 @@ class WebsiteTasks(TaskSequence):
         else:
             self.token = login_response_dict['data']['token']
             print("get vcode response: ", login_response_dict)
+
 
         # 上传照片
         front_image = image_generator.get_image_bytes('正面')
@@ -70,7 +75,17 @@ class WebsiteTasks(TaskSequence):
         """
 
         # 获取认证项
+        self.name = "某某"
+        self.cid = cid_generate()
+
         self.get_validation_item()
+
+        # 有盾回调
+        result = get_youdun_recognization()
+        payload = dict(eventId=self.event_id, result=result)
+        yd_callback_response = self.client.post('http://10.10.10.200:20997/rum/test/youdun/recognize', data=payload)
+        if yd_callback_response.status_code == 200:
+            print(str(self.mobile) + "有盾回调发送成功")
 
         profile_response = self.request_profile_validation()
         profile_response_dict = json.loads(profile_response.content)
@@ -84,7 +99,7 @@ class WebsiteTasks(TaskSequence):
             print(str(self.mobile) + "实名认证失败")
             # self.interrupt()
 
-    @seq_task(2)
+    @seq_task(1)
     @task(1)
     def carrier(self):
         """
@@ -95,10 +110,18 @@ class WebsiteTasks(TaskSequence):
         channel_id = "0"
         header = {"token": self.token}
 
+        # sdk上传
+        sdk_upload_data = dict(eventId=self.event_id, data=sdk_data)
+        sdk_response = self.client.post("http://10.10.10.200:20997/rum/test/sdk/saveData", sdk_upload_data)
+        if sdk_response.status_code == 200:
+            print(str(self.mobile) + "sdk数据发送成功")
+
         print("moxie carrier request")
-        # 数据源
-        # payload = dict(eventId=self.event_id, result=moxie_data)
-        # self.client.post("http://10.10.10.200:20997/rum/test", payload)
+        # 魔蝎数据源
+        payload = dict(eventId=self.event_id, result=moxie_data)
+        moxie_callback_response = self.client.post("http://10.10.10.200:20997/rum/test/moxie/carrier", payload)
+        if moxie_callback_response.status_code == 200:
+            print(str(self.mobile) + "魔蝎回调发送成功")
 
         # 回调
         carrier_callback_body = dict(mobile=self.mobile, companyId=company_id, channelId=channel_id, status="1")
@@ -123,14 +146,117 @@ class WebsiteTasks(TaskSequence):
 
     @seq_task(3)
     @task(1)
-    def bankcard(self):
+    def add_bankcard(self):
         """
         银行卡认证
         :return:
         """
+        company_id = "1"
+        channel_id = "0"
 
+        print("bankcard request")
+        # 用户银行卡列表
+        self.bankcard_list()
 
-        return
+        # 生产银行卡号
+        self.bankcard = bankcard_generate()
+
+        # 银行卡归属查询
+        ascription_url = '/bankcard/get/ascription?' \
+                         + validation_query_param_str.format(company_id=company_id, channel_id=channel_id,
+                                                             mobile=self.mobile, event_id=self.event_id, ) \
+                         + '&bankAccountNumber={bankcard_account_number}'.format(bankcard_account_number=self.bankcard)
+        bankcard_info_response = self.client.get(ascription_url)
+        bankcard_info_response_dict = json.loads(bankcard_info_response.content)
+        print(str(self.mobile) + "银行卡归属")
+        print(bankcard_info_response_dict)
+        bank_code = bankcard_info_response_dict['data']['bankCode']
+        bank_name = bankcard_info_response_dict['data']['bankName']
+
+        # 协议支付短信
+        bankcard_request_body = dict(companyId=company_id, channelId=channel_id, mobile=self.mobile,
+                                     eventId=self.event_id, bankAccountNumber=self.bankcard, cid=self.cid,
+                                     bankAccountName='某某', bankName=bank_name, bankCode=bank_code,
+                                     bankMobile=self.mobile, vcode='000000')
+        bankcard_sms_response = self.client.post('/bankcard/sms', bankcard_request_body)
+        bankcard_sms_response_dict = json.loads(bankcard_sms_response.content)
+        print(str(self.mobile) + "协议支付短信")
+        print(bankcard_sms_response_dict)
+        if bankcard_sms_response_dict['code'] != '200':
+            print(str(self.mobile) + "获取协议支付短信失败")
+            return
+
+        self.new_bank_account_id = bankcard_sms_response_dict['data']['newBankAccountId']
+        self.order_number = bankcard_sms_response_dict['data']['orderNumber']
+
+        # 添加银行卡
+        bankcard_request_body['newBankAccountId'] = self.new_bank_account_id
+        bankcard_request_body['orderNumber'] = self.order_number
+
+        bankcard_binding_response = self.client.post('/bankcard/add', bankcard_request_body)
+        if bankcard_binding_response.status_code == 200:
+            print(str(self.mobile) + "添加银行卡{bankcard}成功".format(bankcard=self.bankcard))
+        else:
+            print(str(self.mobile) + "添加银行卡{bankcard}失败".format(bankcard=self.bankcard))
+
+    @seq_task(4)
+    @task(1)
+    def choose_bankcard(self):
+        # 选择银行卡
+        company_id = "1"
+        channel_id = "0"
+
+        choose_bankcard_request_body = dict(companyId=company_id, channelId=channel_id, mobile=self.mobile,
+                                            bankAccountId=self.new_bank_account_id)
+        choose_bankcard_response = self.client.post('/bankcard/choice', choose_bankcard_request_body)
+        if choose_bankcard_response.status_code == 200:
+            print(str(self.mobile) + "选择银行卡{bankcard}成功".format(bankcard=self.bankcard))
+        else:
+            print(str(self.mobile) + "选择银行卡{bankcard}失败".format(bankcard=self.bankcard))
+
+    @seq_task(5)
+    @task(1)
+    def bid_application(self):
+        company_id = "1"
+        channel_id = "0"
+        header = {"token": self.token}
+        self.client.headers.update(header)
+
+        # 认证项
+        self.get_validation_item()
+
+        # 用户银行卡列表
+        bankcard_response_dict = self.bankcard_list()
+        self.bankcard = list(filter(lambda x: x.get('isDefault'), bankcard_response_dict['data']))[0]['bankAccountId']
+
+        # 产品列表
+        product_list_url = '/product/list?' + validation_query_param_str \
+            .format(company_id=company_id, channel_id=channel_id, mobile=self.mobile, event_id=self.event_id)
+        product_response = self.client.get(product_list_url)
+        product_response_dict = json.loads(product_response.content)
+        product_id_list = list(map(lambda x:x.get('productId'), product_response_dict['data']))
+
+        # 进件条件
+        apply_condition_url = '/bid/check/apply/condition?' + validation_query_param_str \
+            .format(company_id=company_id, channel_id=channel_id, mobile=self.mobile, event_id=self.event_id)
+        apply_condition_response = self.client.get(apply_condition_url)
+        if apply_condition_response.status_code == 200:
+            print(str(self.mobile) + "允许查看进件详情")
+        else:
+            print(str(self.mobile) + "不允许查看进件详情")
+            print(apply_condition_response.content)
+
+        # 进件申请
+        product_id = random.choice(product_id_list)
+        bid_apply_req_body = dict(companyId=company_id, channelId=channel_id, mobile=self.mobile, eventId=self.event_id,
+                                  bankAccountId=self.bankcard, productId=product_id, raiseAmount=0.00)
+        bid_apply_response = self.client.post('/bid/apply', bid_apply_req_body)
+        if bid_apply_response.status_code == 200:
+            bid_apply_response_dict = json.loads(bid_apply_response.content)
+            print(bid_apply_response_dict)
+            if bid_apply_response_dict['code'] == '200':
+                bid_id = bid_apply_response_dict['data']['bidId']
+                print(str(self.mobile) + "进件成功" + str(bid_id))
 
     def get_validation_item(self):
         """
@@ -149,17 +275,15 @@ class WebsiteTasks(TaskSequence):
 
         if validation_response.status_code == 200:
             self.validation_item = validation_response_dict['data']
-            print("获取认证项成功")
+            print(str(self.mobile) + "获取认证项成功")
             print(self.validation_item)
         else:
-            print("获取认证项失败")
+            print(str(self.mobile) + "获取认证项失败")
             self.interrupt()
 
     def request_profile_validation(self):
         company_id = "1"
         channel_id = "0"
-        self.name = "某某"
-        self.cid = generate()
         education_level = random.randint(0, 3)
         marital_status = random.randint(0, 4)
         income_level = random.randint(0, 6)
@@ -181,8 +305,21 @@ class WebsiteTasks(TaskSequence):
                                 eventId=self.event_id)
         self.client.headers.update(header)
         profile_response = self.client.post('/profile/upload', profile_req_body)
-        print("实名认证请求")
+        print(str(self.mobile) + "实名认证请求")
         return profile_response
+
+    def bankcard_list(self):
+        company_id = "1"
+        channel_id = "0"
+        header = {"token": self.token}
+        validation_url = '/bankcard/list?' + validation_query_param_str\
+            .format(company_id=company_id, channel_id=channel_id, mobile=self.mobile, event_id=self.event_id)
+
+        self.client.headers.update(header)
+        bankcard_list_response = self.client.get(validation_url)
+        bankcard_list_response_dict = json.loads(bankcard_list_response.content)
+        print(bankcard_list_response_dict)
+        return bankcard_list_response_dict
 
 
 class WebUserLocust(HttpLocust):
