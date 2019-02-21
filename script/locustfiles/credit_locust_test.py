@@ -39,7 +39,7 @@ class WebsiteTasks(TaskSequence):
         print("moxie carrier request")
 
         payload = dict(eventId=self.event_id, result=data)
-        self.client.post("/", payload)
+        self.client.get("/", payload)
 
     @seq_task(3)
     @task(1)
