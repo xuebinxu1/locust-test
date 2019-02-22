@@ -147,9 +147,11 @@ class WebsiteTasks(TaskSequence):
         :return:
         """
         event_id = self.event_id
+        data = json.loads(moxie_callback_data)
+        data['user_id'] = event_id
         try:
             response = self.client.post('http://10.10.10.200:20997/rum/test/callback/moxie-carrier/bill',
-                                        data=moxie_callback_data, headers=moxie_callback_headers)
+                                        data=json.dumps(data), headers=moxie_callback_headers)
             if response.status_code == 201:
                 print("魔蝎回调成功.event_id: %s" % event_id)
             else:
