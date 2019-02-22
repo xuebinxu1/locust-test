@@ -78,6 +78,7 @@ class WebsiteTasks(TaskSequence):
         headers = {"Content-Type": "application/json;charset=UTF-8"}
         data = json.loads(youdun_callback_data)
         event_id = self.event_id
+        data['partner_order_id'] = event_id
         try:
             response = self.client.post('http://10.10.10.200:20997/rum/test/callback/youdun/recognition', data=json.dumps(data),
                                         headers=headers)
