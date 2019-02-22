@@ -1,6 +1,5 @@
 import sys, os
 
-
 sys.path.append(os.getcwd())
 import threading
 import time
@@ -19,10 +18,12 @@ from script.credit.moxie_callback_data import data as moxie_callback_data, heade
 from script.credit.youdun_data import get_youdun_recognization
 from script.credit.sdk_data import data as sdk_data
 from locust import HttpLocust, TaskSequence, task, seq_task
+from Crypto.Hash import MD5
 
 counter = 0
 
 validation_query_param_str = 'companyId={company_id}&channelId={channel_id}&mobile={mobile}&eventId={event_id}'
+
 
 class WebsiteTasks(TaskSequence):
     def on_start(self):
@@ -61,7 +62,6 @@ class WebsiteTasks(TaskSequence):
             self.token = login_response_dict['data']['token']
             print("get vcode response: ", login_response_dict)
 
-
         # 上传照片
         front_image = image_generator.get_image_bytes('正面')
         back_image = image_generator.get_image_bytes('背面')
@@ -79,8 +79,12 @@ class WebsiteTasks(TaskSequence):
         data = json.loads(youdun_callback_data)
         event_id = self.event_id
         data['partner_order_id'] = event_id
+        sign_time = data['sign_time']
+        sign = self.get_md5_sign(data['partner_order_id'], sign_time)
+        data['sign'] = sign.upper()
         try:
-            response = self.client.post('http://10.10.10.200:20997/rum/test/callback/youdun/recognition', data=json.dumps(data),
+            response = self.client.post('http://10.10.10.200:20997/rum/test/callback/youdun/recognition',
+                                        data=json.dumps(data),
                                         headers=headers)
             response_data = json.loads(response.content)
             if response_data['code'] == '1':
@@ -181,8 +185,8 @@ class WebsiteTasks(TaskSequence):
         # 查询运营商状态
         self.client.headers.update(header)
         carrier_status_response = self.client.get('/carrier/status?' + validation_query_param_str
-                        .format(company_id=company_id, channel_id=channel_id,
-                                mobile=self.mobile, event_id=self.event_id))
+                                                  .format(company_id=company_id, channel_id=channel_id,
+                                                          mobile=self.mobile, event_id=self.event_id))
         carrier_response_dict = json.loads(carrier_status_response.content)
 
         print(carrier_response_dict)
@@ -290,7 +294,7 @@ class WebsiteTasks(TaskSequence):
             .format(company_id=company_id, channel_id=channel_id, mobile=self.mobile, event_id=self.event_id)
         product_response = self.client.get(product_list_url)
         product_response_dict = json.loads(product_response.content)
-        product_id_list = list(map(lambda x:x.get('productId'), product_response_dict['data']))
+        product_id_list = list(map(lambda x: x.get('productId'), product_response_dict['data']))
 
         # 进件条件
         apply_condition_url = '/bid/check/apply/condition?' + validation_query_param_str \
@@ -322,7 +326,7 @@ class WebsiteTasks(TaskSequence):
         company_id = "1"
         channel_id = "0"
         header = {"token": self.token}
-        validation_url = '/basic/user/validation?' + validation_query_param_str\
+        validation_url = '/basic/user/validation?' + validation_query_param_str \
             .format(company_id=company_id, channel_id=channel_id, mobile=self.mobile, event_id=self.event_id)
 
         self.client.headers.update(header)
@@ -368,7 +372,7 @@ class WebsiteTasks(TaskSequence):
         company_id = "1"
         channel_id = "0"
         header = {"token": self.token}
-        validation_url = '/bankcard/list?' + validation_query_param_str\
+        validation_url = '/bankcard/list?' + validation_query_param_str \
             .format(company_id=company_id, channel_id=channel_id, mobile=self.mobile, event_id=self.event_id)
 
         self.client.headers.update(header)
@@ -376,6 +380,12 @@ class WebsiteTasks(TaskSequence):
         bankcard_list_response_dict = json.loads(bankcard_list_response.content)
         print(bankcard_list_response_dict)
         return bankcard_list_response_dict
+
+    def get_md5_sign(self, partner_order_id, sign_time):
+        from config.constant import YOUDUN_PUBLIC_KEY, YOUDUN_SECURITY_KEY
+        sign_str = "pub_key=%s|partner_order_id=%s|sign_time=%s|security_key=%s" \
+                   % (YOUDUN_PUBLIC_KEY, partner_order_id, sign_time, YOUDUN_SECURITY_KEY)
+        return hashlib.md5(sign_str.encode('utf-8')).hexdigest()
 
 
 class WebUserLocust(HttpLocust):
