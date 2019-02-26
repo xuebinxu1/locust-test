@@ -11,15 +11,10 @@ import config.constant as constant
 import script.credit.image_generator as image_generator
 from script.credit.cid_generator import generate as cid_generate
 from script.credit.bankcard_generator import generate as bankcard_generate
-from script.credit.moxie_data import data as moxie_data
 from script.credit.youdun_callback_data import youdun_callback_data
 from script.credit.sdk_data import data as sdk_callback_data
-from script.credit.moxie_callback_data import data as moxie_callback_data, headers as moxie_callback_headers
-from script.credit.youdun_data import get_youdun_recognization
-from script.credit.sdk_data import data as sdk_data
 from locust import HttpLocust, TaskSequence, task, seq_task
-from Crypto.Hash import MD5
-
+from script.credit.moxie_callback_data import task_headers, bill_headers, report_headers
 counter = 0
 
 validation_query_param_str = 'companyId={company_id}&channelId={channel_id}&mobile={mobile}&eventId={event_id}'
@@ -203,12 +198,24 @@ class WebsiteTasks(TaskSequence):
         :return:
         """
         event_id = self.event_id
-        data = json.loads(moxie_callback_data)
-        data['user_id'] = event_id
+        from script.credit.moxie_callback_data import task_headers, bill_headers, report_headers
+        from script.credit.moxie_callback_data import task_data, bill_data, report_data
+        task_data = json.loads(task_data)
+        bill_data = json.loads(bill_data)
+        report_data = json.loads(report_data)
+        task_data['user_id'] = event_id
+        bill_data['user_id'] = event_id
+        report_data['user_id'] = event_id
         try:
-            response = self.client.post('http://10.10.10.200:20997/rum/test/callback/moxie-carrier/bill',
-                                        data=json.dumps(data), headers=moxie_callback_headers)
-            if response.status_code == 201:
+            task_response = self.client.post('http://10.10.10.200:20997/rum/test/callback/moxie-carrier/task',
+                                             data=json.dumps(task_data), headers=task_headers)
+            report_response = self.client.post('http://10.10.10.200:20997/rum/test/callback/moxie-carrier/report',
+                                               data=json.dumps(report_data), headers=report_headers)
+            bill_response = self.client.post('http://10.10.10.200:20997/rum/test/callback/moxie-carrier/bill',
+                                             data=json.dumps(bill_data), headers=bill_headers)
+            if task_response.status_code == 201 \
+                    and bill_response.status_code == 201 \
+                    and report_response.status_code == 201:
                 print("魔蝎回调成功.event_id: %s" % event_id)
             else:
                 print("魔蝎回调失败.event_id: %s" % event_id)
