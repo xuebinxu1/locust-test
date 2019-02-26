@@ -26,12 +26,56 @@ validation_query_param_str = 'companyId={company_id}&channelId={channel_id}&mobi
 
 
 class WebsiteTasks(TaskSequence):
-    def on_start(self):
+    # def on_start(self):
+    #     # 获取验证码
+    #     company_id = "1"
+    #     channel_id = "0"
+    #     mobile_platform = random.choice([0, 1])
+    #     self.mobile = 13700000060 + self.locust.get_count()
+    #
+    #     validation_str = hashlib.md5(str(self.mobile).encode('utf-8')).hexdigest()[3:19]
+    #     header = {"aabbcc": validation_str}
+    #     vcode_req_body = dict(mobile=self.mobile, companyId=company_id, channelId=channel_id,
+    #                           mobilePlatform=mobile_platform)
+    #
+    #     self.client.headers.update(header)
+    #     vcode_response = self.client.post('/user/login/vcode', vcode_req_body)
+    #     vcode_response_dict = json.loads(vcode_response.content)
+    #     print("get vcode response: ", vcode_response_dict)
+    #
+    #     if vcode_response.status_code != 200 and vcode_response_dict['code'] != '200':
+    #         vcode_response.failure("get vcode failed")
+    #         self.interrupt()
+    #     else:
+    #         self.vcode = "0123"
+    #         self.event_id = vcode_response_dict['data']['eventId']
+    #
+    #     # 登陆
+    #     login_req_body = dict(mobile=self.mobile, companyId=company_id, channelId=channel_id,
+    #                           mobilePlatform=mobile_platform, vcode=self.vcode, eventId=self.event_id)
+    #     login_response = self.client.post('/user/login', login_req_body)
+    #     login_response_dict = json.loads(login_response.content)
+    #
+    #     if login_response.status_code != 200:
+    #         login_response.failure("login failed, mobile: ", self.mobile)
+    #     else:
+    #         self.token = login_response_dict['data']['token']
+    #         print("get vcode response: ", login_response_dict)
+    #
+    #     # 上传照片
+    #     front_image = image_generator.get_image_bytes('正面')
+    #     back_image = image_generator.get_image_bytes('背面')
+    #     oss.upload_file(str(self.mobile) + 'front', front_image)
+    #     oss.upload_file(str(self.mobile) + 'back', back_image)
+
+    @seq_task(1)
+    @task(1)
+    def vcode(self):
         # 获取验证码
         company_id = "1"
         channel_id = "0"
         mobile_platform = random.choice([0, 1])
-        self.mobile = 13700000010 + self.locust.get_count()
+        self.mobile = 13721000000 + self.locust.get_count()
 
         validation_str = hashlib.md5(str(self.mobile).encode('utf-8')).hexdigest()[3:19]
         header = {"aabbcc": validation_str}
@@ -50,6 +94,13 @@ class WebsiteTasks(TaskSequence):
             self.vcode = "0123"
             self.event_id = vcode_response_dict['data']['eventId']
 
+    @seq_task(2)
+    @task(1)
+    def login(self):
+        # 获取验证码
+        company_id = "1"
+        channel_id = "0"
+        mobile_platform = random.choice([0, 1])
         # 登陆
         login_req_body = dict(mobile=self.mobile, companyId=company_id, channelId=channel_id,
                               mobilePlatform=mobile_platform, vcode=self.vcode, eventId=self.event_id)
@@ -68,7 +119,7 @@ class WebsiteTasks(TaskSequence):
         oss.upload_file(str(self.mobile) + 'front', front_image)
         oss.upload_file(str(self.mobile) + 'back', back_image)
 
-    @seq_task(1)
+    @seq_task(3)
     @task(1)
     def youdun_recognize_callback(self):
         """
@@ -87,6 +138,7 @@ class WebsiteTasks(TaskSequence):
                                         data=json.dumps(data),
                                         headers=headers)
             response_data = json.loads(response.content)
+            print(response_data)
             if response_data['code'] == '1':
                 print("有盾活体检测回调成功。event_id: %s" % event_id)
             else:
@@ -94,7 +146,7 @@ class WebsiteTasks(TaskSequence):
         except Exception as e:
             print("有盾回调失败。event_id: %s, exception: %s" % (event_id, e))
 
-    @seq_task(2)
+    @seq_task(4)
     @task(1)
     def profile(self):
         """
@@ -127,7 +179,7 @@ class WebsiteTasks(TaskSequence):
             print(str(self.mobile) + "实名认证失败")
             # self.interrupt()
 
-    @seq_task(3)
+    @seq_task(5)
     @task(1)
     def sdk_callback(self):
         """
@@ -143,7 +195,7 @@ class WebsiteTasks(TaskSequence):
         except Exception as e:
             print("sdk上传数据失败，exception: %s" % e)
 
-    @seq_task(4)
+    @seq_task(6)
     @task(1)
     def moxie_callback(self):
         """
@@ -163,7 +215,7 @@ class WebsiteTasks(TaskSequence):
         except Exception as e:
             print("魔蝎回调失败.event_id: %s" % event_id)
 
-    @seq_task(5)
+    @seq_task(7)
     @task(1)
     def carrier(self):
         """
@@ -183,22 +235,24 @@ class WebsiteTasks(TaskSequence):
         print("moxie carrier request")
 
         # 查询运营商状态
-        self.client.headers.update(header)
-        carrier_status_response = self.client.get('/carrier/status?' + validation_query_param_str
-                                                  .format(company_id=company_id, channel_id=channel_id,
-                                                          mobile=self.mobile, event_id=self.event_id))
-        carrier_response_dict = json.loads(carrier_status_response.content)
+        for i in range(5):
+            self.client.headers.update(header)
+            carrier_status_response = self.client.get('/carrier/status?' + validation_query_param_str
+                                                      .format(company_id=company_id, channel_id=channel_id,
+                                                              mobile=self.mobile, event_id=self.event_id))
+            carrier_response_dict = json.loads(carrier_status_response.content)
 
-        print(carrier_response_dict)
-        if carrier_status_response.status_code == 200:
-            if carrier_response_dict['code'] == '200' and carrier_response_dict['data']['verified']:
-                print(str(self.mobile) + "运营商认证成功")
-        else:
-            print(carrier_status_response)
-            print(str(self.mobile) + "运营商认证失败")
+            print(carrier_response_dict)
+            if carrier_status_response.status_code == 200:
+                if carrier_response_dict.get('data') is not None and carrier_response_dict['data']['verified']:
+                    print(str(self.mobile) + "运营商认证成功")
+                    break
+            else:
+                print(carrier_status_response)
+                print(str(self.mobile) + "运营商认证失败")
 
-    @seq_task(6)
-    @task(2)
+    @seq_task(8)
+    @task(1)
     def add_bankcard(self):
         """
         银行卡认证
@@ -252,7 +306,7 @@ class WebsiteTasks(TaskSequence):
         else:
             print(str(self.mobile) + "添加银行卡{bankcard}失败".format(bankcard=bankcard))
 
-    @seq_task(7)
+    @seq_task(9)
     @task(1)
     def choose_bankcard(self):
         # 选择银行卡
@@ -261,7 +315,7 @@ class WebsiteTasks(TaskSequence):
 
         # 用户银行卡列表
         bankcard_response_dict = self.bankcard_list()
-        bankcard_list = list(filter(lambda x: not bool(x.get('isDefault')), bankcard_response_dict['data']))
+        bankcard_list = list(bankcard_response_dict['data'])
         bankcard_account_dict = random.choice(bankcard_list)
         bankcard_account_id = bankcard_account_dict['bankAccountId']
         bankcard = bankcard_account_dict['bankAccountNumber']
@@ -274,7 +328,7 @@ class WebsiteTasks(TaskSequence):
         else:
             print(str(self.mobile) + "选择银行卡{bankcard}失败".format(bankcard=bankcard))
 
-    @seq_task(8)
+    @seq_task(10)
     @task(1)
     def bid_application(self):
         company_id = "1"
@@ -351,9 +405,9 @@ class WebsiteTasks(TaskSequence):
         back_img_url = constant.TEST_OSS_URL + '/' + (str(self.mobile) + 'back')
         living_test_result = random.choice([0, 1])
         emrg_contact_name_a = "某某A"
-        emrg_contact_mobile_a = 13700000000
+        emrg_contact_mobile_a = 13700000001
         emrg_contact_name_b = "某某B"
-        emrg_contact_mobile_b = 13700000000
+        emrg_contact_mobile_b = 13700000002
 
         header = {"token": self.token}
         profile_req_body = dict(mobile=self.mobile, companyId=company_id, channelId=channel_id,
@@ -390,9 +444,9 @@ class WebsiteTasks(TaskSequence):
 
 class WebUserLocust(HttpLocust):
     task_set = WebsiteTasks
-    min_wait = 1000
-    max_wait = 2000
-    host = constant.ICEWINE_BASE_URL_LOCAL
+    min_wait = 2000
+    max_wait = 4000
+    host = constant.ICEWINE_BASE_URL_STAGING
 
     def get_count(self):
         """

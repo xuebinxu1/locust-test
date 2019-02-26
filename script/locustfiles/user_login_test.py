@@ -12,6 +12,7 @@ import config.constant as constant
 from locust import HttpLocust, TaskSequence, task, seq_task
 
 counter = 0
+validation_query_param_str = 'companyId={company_id}&channelId={channel_id}&mobile={mobile}&eventId={event_id}'
 
 
 class WebsiteTasks(TaskSequence):
@@ -26,7 +27,7 @@ class WebsiteTasks(TaskSequence):
 
         company_id = "1"
         channel_id = "0"
-        self.mobile = 13700000000 + self.locust.get_count()
+        self.mobile = 13720002000 + self.locust.get_count()
         mobile_platform = random.choice([0, 1])
         validation_str = hashlib.md5(str(self.mobile).encode('utf-8')).hexdigest()[3:19]
         timestamp = int(round(time.time() * 1000))
@@ -71,26 +72,42 @@ class WebsiteTasks(TaskSequence):
         # payload = dict(eventId=self.event_id, result=data)
         # self.client.post("/rum/test/", payload)
 
-    @seq_task(3)
-    @task(1)
-    def youdun_recognize(self):
-        """
-        用户登陆
-        :return:
-        """
-        company_id = "1"
-        channel_id = random.choice([None, "0"])
-        mobile_platform = "1"
-        login_req_body = dict(mobile = self.mobile, companyId=company_id, channelId=channel_id,
-                              mobilePlatform=mobile_platform, vcode=self.vcode, eventId=self.event_id)
-        response = self.client.post('/user/login', login_req_body)
-        login_response_dict = json.loads(response.content)
+    # @seq_task(3)
+    # @task(1)
+    # def login(self):
+    #     """
+    #     用户登陆
+    #     :return:
+    #     """
+    #     company_id = "1"
+    #     channel_id = random.choice([None, "0"])
+    #     mobile_platform = "1"
+    #     login_req_body = dict(mobile = self.mobile, companyId=company_id, channelId=channel_id,
+    #                           mobilePlatform=mobile_platform, vcode=self.vcode, eventId=self.event_id)
+    #     response = self.client.post('/user/login', login_req_body)
+    #     login_response_dict = json.loads(response.content)
+    #
+    #     if response.status_code != 200:
+    #         response.failure("login failed, mobile: ", self.mobile)
+    #     else:
+    #         self.token = login_response_dict['data']['token']
+    #         print("get vcode response: ", login_response_dict)
 
-        if response.status_code != 200:
-            response.failure("login failed, mobile: ", self.mobile)
-        else:
-            self.token = login_response_dict['data']['token']
-            print("get vcode response: ", login_response_dict)
+    # @seq_task(4)
+    # @task(3)
+    # def product_list(self):
+    #     """
+    #     产品列表
+    #     :return:
+    #     """
+    #     # 产品列表
+    #     company_id = "1"
+    #     channel_id = "0"
+    #     product_list_url = '/product/list?' + validation_query_param_str \
+    #         .format(company_id=company_id, channel_id=channel_id, mobile=self.mobile, event_id=self.event_id)
+    #     product_response = self.client.get(product_list_url)
+    #     product_response_dict = json.loads(product_response.content)
+    #     print(product_response_dict)
 
         # result = get_youdun_recognization()
         #

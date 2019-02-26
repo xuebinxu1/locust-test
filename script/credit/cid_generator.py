@@ -38,11 +38,11 @@ def get_check_digit(id_number):
     return check_digit if check_digit < 10 else 'X'
 
 
-print(generate())
+# print(generate())
 # company_id = "1"
 # channel_id = "0"
-# header = {"token": "8f265d159967bc979cd46db3c51078514dc5980b35da68fe0ed1c3f1ede0d137"}
-# data = dict(companyId=company_id, channelId=channel_id, mobile='13700000001', eventId='1_0_13700000001_1550127129817')
-# response_dict = json.loads(requests.get(url='http://localhost:6100/icewine/bankcard/list', headers=header,
+# header = {"token": "a4bee62dd4d5536a67bc07acd02dcb6448a8115909ae907d2411be6620d7fefa"}
+# data = dict(companyId=company_id, channelId=channel_id, mobile='13700000809', eventId='1_0_13700000809_1550127129817')
+# response_dict = json.loads(requests.get(url='http://localhost:6100/icewine/carrier/status', headers=header,
 #                                         params=data).content)
 # print(response_dict)
