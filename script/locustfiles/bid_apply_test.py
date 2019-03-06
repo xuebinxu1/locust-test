@@ -70,7 +70,7 @@ class WebsiteTasks(TaskSequence):
         company_id = "1"
         channel_id = "0"
         mobile_platform = random.choice([0, 1])
-        self.mobile = 13721000000 + self.locust.get_count()
+        self.mobile = 13722000000 + self.locust.get_count()
 
         validation_str = hashlib.md5(str(self.mobile).encode('utf-8')).hexdigest()[3:19]
         header = {"aabbcc": validation_str}
@@ -129,7 +129,7 @@ class WebsiteTasks(TaskSequence):
         sign = self.get_md5_sign(data['partner_order_id'], sign_time)
         data['sign'] = sign.upper()
         try:
-            response = self.client.post('http://10.10.10.200:20997/rum/test/callback/youdun/recognition',
+            response = self.client.post('http://47.98.129.81:20997/rum/test/callback/youdun/recognition',
                                         data=json.dumps(data),
                                         headers=headers)
             response_data = json.loads(response.content)
@@ -158,7 +158,7 @@ class WebsiteTasks(TaskSequence):
         # 有盾回调
         # result = get_youdun_recognization()
         # payload = dict(eventId=self.event_id, result=result)
-        # yd_callback_response = self.client.post('http://10.10.10.200:20997/rum/test/youdun/recognize', data=payload)
+        # yd_callback_response = self.client.post('http://47.98.129.81:20997/rum/test/youdun/recognize', data=payload)
         # if yd_callback_response.status_code == 200:
         #     print(str(self.mobile) + "有盾回调发送成功")
 
@@ -184,7 +184,7 @@ class WebsiteTasks(TaskSequence):
         event_id = self.event_id
         payload = dict(eventId=event_id, data=sdk_callback_data)
         try:
-            response = self.client.post('http://10.10.10.200:20997/rum/test/sdk/saveData', data=payload)
+            response = self.client.post('http://47.98.129.81:20997/rum/test/sdk/saveData', data=payload)
             if response.status_code == 200:
                 print("sdk数据上传成功。event_id: %s" % event_id)
         except Exception as e:
@@ -207,11 +207,11 @@ class WebsiteTasks(TaskSequence):
         bill_data['user_id'] = event_id
         report_data['user_id'] = event_id
         try:
-            task_response = self.client.post('http://10.10.10.200:20997/rum/test/callback/moxie-carrier/task',
+            task_response = self.client.post('http://47.98.129.81:20997/rum/test/callback/moxie-carrier/task',
                                              data=json.dumps(task_data), headers=task_headers)
-            report_response = self.client.post('http://10.10.10.200:20997/rum/test/callback/moxie-carrier/report',
+            report_response = self.client.post('http://47.98.129.81:20997/rum/test/callback/moxie-carrier/report',
                                                data=json.dumps(report_data), headers=report_headers)
-            bill_response = self.client.post('http://10.10.10.200:20997/rum/test/callback/moxie-carrier/bill',
+            bill_response = self.client.post('http://47.98.129.81:20997/rum/test/callback/moxie-carrier/bill',
                                              data=json.dumps(bill_data), headers=bill_headers)
             if task_response.status_code == 201 \
                     and bill_response.status_code == 201 \
@@ -235,7 +235,7 @@ class WebsiteTasks(TaskSequence):
 
         # sdk上传
         # sdk_upload_data = dict(eventId=self.event_id, data=sdk_data)
-        # sdk_response = self.client.post("http://10.10.10.200:20997/rum/test/sdk/saveData", sdk_upload_data)
+        # sdk_response = self.client.post("http://47.98.129.81:20997/rum/test/sdk/saveData", sdk_upload_data)
         # if sdk_response.status_code == 200:
         #     print(str(self.mobile) + "sdk数据发送成功")
 
@@ -451,8 +451,8 @@ class WebsiteTasks(TaskSequence):
 
 class WebUserLocust(HttpLocust):
     task_set = WebsiteTasks
-    min_wait = 2000
-    max_wait = 4000
+    min_wait = 1000
+    max_wait = 3000
     host = constant.ICEWINE_BASE_URL_STAGING
 
     def get_count(self):

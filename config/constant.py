@@ -9,6 +9,7 @@ YOUDUN_PUBLIC_KEY = '0a1b1bd7-7845-43f4-956a-37a01b90ee4b'
 YOUDUN_SECURITY_KEY = '2ce75531-d635-422e-8455-1c466ae6acb8'
 
 ICEWINE_BASE_URL_LOCAL = 'http://localhost:6100/icewine'
-ICEWINE_BASE_URL_STAGING = 'http://10.10.10.200:20610/icewine'
+ICEWINE_BASE_URL_200 = 'http://10.10.10.200:20610/icewine'
+ICEWINE_BASE_URL_STAGING = 'http://47.98.129.81:20610/icewine'
 
 TEST_OSS_URL = 'http://white-horse.oss-cn-hangzhou.aliyuncs.com'
