@@ -15,6 +15,7 @@ from script.credit.youdun_callback_data import youdun_callback_data
 from script.credit.sdk_data import data as sdk_callback_data
 from locust import HttpLocust, TaskSequence, task, seq_task
 from script.credit.moxie_callback_data import task_headers, bill_headers, report_headers
+
 counter = 0
 
 validation_query_param_str = 'companyId={company_id}&channelId={channel_id}&mobile={mobile}&eventId={event_id}'
@@ -67,10 +68,10 @@ class WebsiteTasks(TaskSequence):
     @task(1)
     def vcode(self):
         # 获取验证码
-        company_id = "1"
+        company_id = "200"
         channel_id = "0"
         mobile_platform = random.choice([0, 1])
-        self.mobile = 13722000000 + self.locust.get_count()
+        self.mobile = 13723001000 + self.locust.get_count()
 
         validation_str = hashlib.md5(str(self.mobile).encode('utf-8')).hexdigest()[3:19]
         header = {"aabbcc": validation_str}
@@ -93,7 +94,7 @@ class WebsiteTasks(TaskSequence):
     @task(1)
     def login(self):
         # 获取验证码
-        company_id = "1"
+        company_id = "200"
         channel_id = "0"
         mobile_platform = random.choice([0, 1])
         # 登陆
@@ -229,7 +230,7 @@ class WebsiteTasks(TaskSequence):
         运营商认证
         :return:
         """
-        company_id = "1"
+        company_id = "200"
         channel_id = "0"
         header = {"token": self.token}
 
@@ -265,7 +266,7 @@ class WebsiteTasks(TaskSequence):
         银行卡认证
         :return:
         """
-        company_id = "1"
+        company_id = "200"
         channel_id = "0"
 
         print("bankcard request")
@@ -317,7 +318,7 @@ class WebsiteTasks(TaskSequence):
     @task(1)
     def choose_bankcard(self):
         # 选择银行卡
-        company_id = "1"
+        company_id = "200"
         channel_id = "0"
 
         # 用户银行卡列表
@@ -338,8 +339,10 @@ class WebsiteTasks(TaskSequence):
     @seq_task(10)
     @task(1)
     def bid_application(self):
-        company_id = "1"
+        company_id = "200"
         channel_id = "0"
+        self.version = "1.1.0"
+
         header = {"token": self.token}
         self.client.headers.update(header)
 
@@ -359,7 +362,7 @@ class WebsiteTasks(TaskSequence):
 
         # 进件条件
         apply_condition_url = '/bid/check/apply/condition?' + validation_query_param_str \
-            .format(company_id=company_id, channel_id=channel_id, mobile=self.mobile, event_id=self.event_id)
+            .format(company_id=company_id, channel_id=channel_id, mobile=self.mobile, event_id=self.event_id) + '&version=' + self.version
         apply_condition_response = self.client.get(apply_condition_url)
         if apply_condition_response.status_code == 200:
             print(str(self.mobile) + "允许查看进件详情")
@@ -370,7 +373,7 @@ class WebsiteTasks(TaskSequence):
         # 进件申请
         product_id = random.choice(product_id_list)
         bid_apply_req_body = dict(companyId=company_id, channelId=channel_id, mobile=self.mobile, eventId=self.event_id,
-                                  bankAccountId=self.bankcard, productId=product_id, raiseAmount=0.00)
+                                  bankAccountId=self.bankcard, productId=product_id, raiseAmount=0.00, version=self.version)
         bid_apply_response = self.client.post('/bid/apply', bid_apply_req_body)
         if bid_apply_response.status_code == 200:
             bid_apply_response_dict = json.loads(bid_apply_response.content)
@@ -384,7 +387,7 @@ class WebsiteTasks(TaskSequence):
         认证项
         :return:
         """
-        company_id = "1"
+        company_id = "200"
         channel_id = "0"
         header = {"token": self.token}
         validation_url = '/basic/user/validation?' + validation_query_param_str \
@@ -403,7 +406,7 @@ class WebsiteTasks(TaskSequence):
             self.interrupt()
 
     def request_profile_validation(self):
-        company_id = "1"
+        company_id = "200"
         channel_id = "0"
         education_level = random.randint(0, 3)
         marital_status = random.randint(0, 4)
@@ -415,6 +418,10 @@ class WebsiteTasks(TaskSequence):
         emrg_contact_mobile_a = 13700000001
         emrg_contact_name_b = "某某B"
         emrg_contact_mobile_b = 13700000002
+        province = random.choice(['北京', '天津', '河北', '山西', '内蒙古', '辽宁', '吉林', '黑龙江', '上海', '江苏', '浙江', '安徽', '福建', '江西', '山东', '河南', '湖北',
+                                  '湖南', '广东', '广西', '海南', '重庆', '四川', '贵州', '云南', '西藏', '陕西', '甘肃', '青海', '宁夏', '新疆', '台湾', '香港', '澳门'])
+        city = '市中心'
+        address = '宇宙中心'
 
         header = {"token": self.token}
         profile_req_body = dict(mobile=self.mobile, companyId=company_id, channelId=channel_id,
@@ -423,6 +430,7 @@ class WebsiteTasks(TaskSequence):
                                 backImage=back_img_url, livingTestResult=living_test_result,
                                 emrgContactNameA=emrg_contact_name_a, emrgContactMobileA=emrg_contact_mobile_a,
                                 emrgContactNameB=emrg_contact_name_b, emrgContactMobileB=emrg_contact_mobile_b,
+                                province=province, city=city, detailedAddress=address,
                                 eventId=self.event_id)
         self.client.headers.update(header)
         profile_response = self.client.post('/profile/upload', profile_req_body)
@@ -430,7 +438,7 @@ class WebsiteTasks(TaskSequence):
         return profile_response
 
     def bankcard_list(self):
-        company_id = "1"
+        company_id = "200"
         channel_id = "0"
         header = {"token": self.token}
         validation_url = '/bankcard/list?' + validation_query_param_str \
