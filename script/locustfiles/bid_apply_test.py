@@ -199,24 +199,17 @@ class WebsiteTasks(TaskSequence):
         :return:
         """
         event_id = self.event_id
-        from script.credit.moxie_callback_data import task_headers, bill_headers, report_headers
-        from script.credit.moxie_callback_data import task_data, bill_data, report_data
-        task_data = json.loads(task_data)
+        from script.credit.moxie_data import callback_data, bill_data, report_data
         bill_data = json.loads(bill_data)
         report_data = json.loads(report_data)
-        task_data['user_id'] = event_id
-        bill_data['user_id'] = event_id
-        report_data['user_id'] = event_id
+        callback_data = json.loads(callback_data)
+        callback_data['bill'] = bill_data
+        callback_data['report'] = report_data
+        callback_data['event_id'] = event_id
         try:
-            task_response = self.client.post('http://47.98.129.81:20997/rum/test/callback/moxie-carrier/task',
-                                             data=json.dumps(task_data), headers=task_headers)
-            report_response = self.client.post('http://47.98.129.81:20997/rum/test/callback/moxie-carrier/report',
-                                               data=json.dumps(report_data), headers=report_headers)
-            bill_response = self.client.post('http://47.98.129.81:20997/rum/test/callback/moxie-carrier/bill',
-                                             data=json.dumps(bill_data), headers=bill_headers)
-            if task_response.status_code == 201 \
-                    and bill_response.status_code == 201 \
-                    and report_response.status_code == 201:
+            bill_response = self.client.post('http://47.98.129.81:20997/rum/test/callback/moxie-carrier/data',
+                                             data=json.dumps(callback_data))
+            if bill_response.status_code == 201:
                 print("魔蝎回调成功.event_id: %s" % event_id)
             else:
                 print("魔蝎回调失败.event_id: %s" % event_id)
