@@ -203,6 +203,7 @@ class WebsiteTasks(TaskSequence):
         bill_data = json.loads(bill_data)
         report_data = json.loads(report_data)
         callback_data = json.loads(callback_data)
+        callback_data['mobile'] = self.mobile
         callback_data['bill'] = bill_data
         callback_data['report'] = report_data
         callback_data['event_id'] = event_id
