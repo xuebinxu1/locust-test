@@ -1,0 +1,33 @@
+#!/user/bin/python3
+# @Author:  LSY
+# @Date:    2019/4/24
+
+# 总注册用户
+TOTAL_REGISTERED_USER = 500
+# 用户实名认证比率
+USER_VERIFIED_RATE = 0.8
+# 用户运营商认证比率
+USER_CARRIER_RATE = 0.8
+# 用户银行卡认证比率
+USER_BANK_CARD_RATE = 0.8
+# 用户进件比率
+USER_BID_APPLY_RATE = 0.9
+# 放款比率
+LOAN_RATE = 0.3
+# 拒件比率
+REJECT_RATE = 0.7
+# 用户还款比率
+USER_REPAYMENT_RATE = 0.3
+# 用户逾期还款比率
+USER_OVERDUE_REPAYMENT_RATE = 0.8
+# 用户逾期3天以内还款比率
+USER_OVERDUE_WITHIN_3_DAYS_REPAYMENT_RATE = 0.4
+# 用户逾期4～7天还款比率
+USER_OVERDUE_4_TO_7_DAYS_REPAYMENT_RATE = 0.4
+# 用户逾期8～30天还款比率
+USER_OVERDUE_8_TO_30_DAYS_REPAYMENT_RATE = 0.2
+
+# 产品周期
+PRODUCT_PERIOD = 7
+# 拒件时间，设定为进件后的10分钟内拒件
+REJECT_PERIOD = 10
