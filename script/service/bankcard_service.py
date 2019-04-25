@@ -71,7 +71,8 @@ def insert(mobile, company_id):
     bankcard = models.Bankcard()
     # 检查是否有默认卡
     if bankcard_data is None:
-        bankcard.id = my_snow().get_next_id()
+        id = my_snow().get_next_id()
+        bankcard.id = id
         bankcard.user_id = user.id
         bankcard.company_id = company_id
         bankcard.bank_code = dict_bank_info['bank_code']
@@ -83,6 +84,9 @@ def insert(mobile, company_id):
         bankcard.payment_channel = payment_channel.payment_channel_name if payment_channel is not None else "富有"  # '支付渠道 富有, 易宝'
         bankcard.is_binding = 1  # '1 已绑定  0 已经解绑',
         bankcard.mchntcd = payment_channel.mchntcd
+        if user_detail.bank_account_id is None:
+            update = {'bank_account_id': id}
+            convert.update_table(models.UserDetail, update, mobile=mobile, company_id=company_id)
     else:
         bankcard.id = my_snow().get_next_id()
         bankcard.user_id = user.id
@@ -96,9 +100,6 @@ def insert(mobile, company_id):
         bankcard.payment_channel = payment_channel.payment_channel_name if payment_channel is not None else "富有"  # '支付渠道 富有, 易宝'
         bankcard.is_binding = 1  # '1 已绑定  0 已经解绑',
         bankcard.mchntcd = payment_channel.mchntcd
-    if user_detail.bank_account_id is None:
-        update = {'bank_account_id': card_no}
-        convert.update_table(models.UserDetail, update, mobile=mobile, company_id=company_id)
     return convert.add_one(bankcard)
 
 # insert(15180279540, 1)
