@@ -2,6 +2,12 @@
 # @Author:  LSY
 # @Date:    2019/4/24
 from script.data_fraud.data_initial import initial_all_user
+import schedule
+import datetime
+from script.demo.util import UserUtil
+from multiprocessing import Process, Manager
+from utils import bid_apply_time
+import time
 
 
 def launch():
@@ -10,21 +16,53 @@ def launch():
     """
     # 初始化用户数据
     user_df = initial_all_user()
-    # 初始化注册用户
-    user_df = registered(user_df, 'registered', 'registered_times')
+    # 初始化Manager字典，用于进程间的数据共享
+    with Manager() as manager:
+        share_dict = manager.dict()
+        p_list = []
+        registered_process = Process(target=registered, args=(user_df, 'registered', share_dict))
+        registered_process.start()
+        p_list.append(registered_process)
+        for res in p_list:
+            res.join()
 
 
-def registered(df, registered, registered_times):
+def registered(df, registered, share_dict={}):
     """
     注册
     :param df: dataframe of all users
     :param registered: column name of registered
-    :param registered_times:  column name of registered time
+    :param share_dict: 用于进程间的共享数据
     :return:
     """
-    registered_df = df[[registered, registered_times]]
-    df['event_id'] = registered_df.apply(lambda user: print(user[registered_times]), axis=1)
-    return df
+    company_id_column = 'company_id'
+    channel_id_column = 'channel_id'
+    registered_times_column = 'registered_times'
+    user_index_column = 'user_index'
+    registered_df = df[[registered, registered_times_column, company_id_column, channel_id_column, user_index_column]]
+    registered_times = registered_df[registered_times_column].apply(lambda time: str(time)).tolist()
+    user_index_list = registered_df[user_index_column].tolist()
+    user_mapping_dict = dict(zip(registered_times, user_index_list))
+    start = bid_apply_time.get_early_morning_time()
+    total = 0
+    while True:
+        start = start.strftime("%Y-%m-%d %H:%M:%S")
+        if start in registered_times:
+            user_index = user_mapping_dict[start]
+            company_id = int(registered_df[registered_df[user_index_column] == user_index][company_id_column])
+            channel_id = int(registered_df[registered_df[user_index_column] == user_index][channel_id_column])
+            # mobile, event_id = UserUtil.register(company_id, channel_id)
+            # share_dict[user_index] = event_id
+            print(start, user_index)
+            total += 1
+        elif datetime.datetime.now().hour == 23 and datetime.datetime.now().minute == 1:
+            # 23点后退出
+            break
+        elif datetime.datetime.strptime(start, "%Y-%m-%d %H:%M:%S").hour == 23:
+            break
+        time.sleep(1)
+        start = datetime.datetime.strptime(start, "%Y-%m-%d %H:%M:%S") + datetime.timedelta(seconds=1)
+    print(total)
 
 
 def verified(df, event_id, verified):
@@ -168,3 +206,20 @@ def overdue_8_to_30_days_repayment(df, event_id, bid_id, overdue_8_to_30_days_re
     overdue_8_to_30_days_repayment_df = df[df[overdue_8_to_30_days_repayment] == 1]
     overdue_8_to_30_days_repayment_df.apply(
         lambda user: print(user[event_id], user[bid_id], user['within_3_days_repayment_times']), axis=1)
+
+
+def change_date_to_time(date):
+    """
+    将日期转为日分秒形式。 '2019-04-25 00:00:00' -》'00:00:00'
+    :param date: 日期
+    :return:
+    """
+    try:
+        time = str(date).split(' ')[1]
+    except Exception:
+        time = '09:00:00'
+    return time
+
+
+if __name__ == '__main__':
+    launch()

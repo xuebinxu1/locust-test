@@ -23,10 +23,11 @@ def initial_all_user(is_read_file=False):
             return user_df
     else:
         total_user = data_fraud.TOTAL_REGISTERED_USER
-        registered_users = [1 for i in range(total_user)]
+        registered_users = [1 for _ in range(total_user)]
         registered_times = bid_apply_time.get_registered_time(total_user)
         user_df = pd.DataFrame(registered_users, columns=['registered'])
         user_df['registered_times'] = registered_times
+        user_df['user_index'] = [i for i in range(total_user)]
         user_df['company_id'] = 110
         # initial channel id
         user_df = initial_user_channel(user_df)
@@ -72,6 +73,7 @@ def initial_user_channel(df):
     xl1_channel_id_list = [data_fraud.XL1_CHANNEL_ID for _ in range(xl1_channel_user_count)]
     df['channel_id'] = default_channel_id_list + zy8_channel_id_list + zy2_channel_id_list + zy7_channel_id_list + xp1_channel_id_list + ay1_channel_id_list + xl1_channel_id_list
     return df
+
 
 def initial_verified_users(total_user, verified_rate):
     """

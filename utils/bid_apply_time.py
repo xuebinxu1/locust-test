@@ -2,8 +2,6 @@
 # @Author:  LSY
 # @Date:    2019/4/22
 import pandas as pd
-import numpy as np
-import math
 from datetime import datetime as dt
 import datetime
 from random import choice
@@ -52,8 +50,11 @@ def get_normal_time(total_person, rate=0.8):
     """
     total_normal_person = round(total_person * rate)
     normal_list = pd.date_range(registered_normal_start_time, registered_normal_end_time, freq='S').tolist()
-    normal_time_list = [choice(normal_list) for person in range(total_normal_person)]
+    normal_time_df = pd.DataFrame(normal_list, columns=['normal_time'])
+    # 无放回抽样
+    normal_time_list = normal_time_df['normal_time'].sample(total_normal_person, replace=False).tolist()
     normal_list = None
+    normal_time_df = None
     return normal_time_list
 
 
@@ -67,16 +68,20 @@ def get_other_period_time(total_person, normal_period_person, splite_rate=0.8):
     :return:时间列表
     """
     other_period_person_count = total_person - normal_period_person
-    date_list = pd.date_range('00:00:00', registered_normal_start_time, freq='S').tolist()
-    date_list1 = pd.date_range(registered_normal_end_time, '23:59:59', freq='S').tolist()
+    date_list = pd.date_range('01:00:00', registered_normal_start_time, freq='S').tolist()
+    date_list1 = pd.date_range(registered_normal_end_time, '23:00:00', freq='S').tolist()
     early_operate_person_count = round(other_period_person_count * (1-splite_rate))
     late_operate_person_count = other_period_person_count - early_operate_person_count
     logging.info("get not normal time. total unnormal person: %s\tearly period person: %s\tlate period person: %s" % (total_person, early_operate_person_count, late_operate_person_count))
-    early_date_list = [choice(date_list) for person in range(early_operate_person_count)]
-    late_date_list = [choice(date_list1) for person in range(late_operate_person_count)]
+    other_period_time_df = pd.DataFrame(date_list, columns=['date_list'])
+    other_period_time_df['date_list1'] = date_list1
+    # 无放回抽样
+    early_date_list = other_period_time_df['date_list'].sample(early_operate_person_count, replace=False).tolist()
+    late_date_list = other_period_time_df['date_list1'].sample(late_operate_person_count, replace=False).tolist()
     early_date_list.extend(late_date_list)
     date_list = None
     date_list1 = None
+    other_period_time_df = None
     return early_date_list
 
 
@@ -105,6 +110,15 @@ def check_is_normal_time(time, normal_start_time, normal_end_time):
         normal_start_time = dt.strptime(normal_start_time, time_normal_format)
         normal_end_time = dt.strptime(normal_end_time, time_normal_format)
     return normal_start_time <= time <= normal_end_time
+
+
+def get_early_morning_time():
+    """
+    获取当天凌晨时间
+    :return:
+    """
+    date = datetime.datetime.now()
+    return datetime.datetime.now().replace(year=date.year, month=date.month, day=date.day, hour=0, minute=0, second=0)
 
 
 if __name__ == "__main__":
