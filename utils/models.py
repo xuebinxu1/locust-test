@@ -154,19 +154,6 @@ class PaymentChannel(Base, TableBase):
     priority = Column(Integer, nullable=True)
 
 
-class PaymentChannel(Base, TableBase):
-    __tablename__ = 'payment_channel'
-
-    company_id = Column(Integer, nullable=True)
-    payment_channel_id = Column(Integer, nullable=True)
-    payment_channel_name = Column(String, nullable=True)
-    mchntcd = Column(String, nullable=True)
-    is_enabled = Column(Integer, nullable=True)
-    type = Column(Integer, nullable=True)
-    is_default = Column(Integer, nullable=True)
-    priority = Column(Integer, nullable=True)
-
-
 class Bid(Base, TableBase):
     __tablename__ = 'bid'
 
@@ -279,7 +266,21 @@ class Transaction(Base, TableBase):
     comment = Column(String, nullable=True)
 
 
+class Channel(Base, TableBase):
+    __tablename__ = 'channel'
+
+    company_id = Column(Integer, nullable=True)
+    name = Column(String, nullable=True)
+    label = Column(String, nullable=True)
+    link = Column(String, nullable=True)
+    payment_type = Column(Integer, nullable=True)
+    template_type = Column(String, nullable=True)
+    is_enabled = Column(Integer, nullable=True)
+    deduct_percent = Column(DECIMAL, nullable=True)
+
+
 # 初始化数据库连接:
-engine = create_engine("mysql+pymysql://root:Cisco123@10.10.10.200:33061/sake")
+# engine = create_engine("mysql+pymysql://root:Cisco123@10.10.10.200:33061/sake")
+engine = create_engine('mysql+mysqldb://sake_demo:3imZYs7Vgm1EzQKp@rm-bp17kkg9v94pvnmla1o.mysql.rds.aliyuncs.com:3306/staging_sake?charset=utf8')
 # 创建DBSession类型:
 DBSession = sessionmaker(bind=engine)
