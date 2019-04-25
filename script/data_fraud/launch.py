@@ -1,7 +1,7 @@
 #!/user/bin/python3
 # @Author:  LSY
 # @Date:    2019/4/24
-from utils.bid_apply_utils import initial_all_user
+from script.data_fraud.data_initial import initial_all_user
 
 
 def launch():
@@ -9,7 +9,9 @@ def launch():
     启动脚本。
     """
     # 初始化用户数据
-    initial_all_user()
+    user_df = initial_all_user()
+    # 初始化注册用户
+    user_df = registered(user_df, 'registered', 'registered_times')
 
 
 def registered(df, registered, registered_times):
