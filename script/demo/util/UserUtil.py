@@ -59,9 +59,7 @@ birth_days = datetime.datetime.strftime(
 )
 
 
-# class WebDemo(object):
-
-def vcode(company_id,channel_id):
+def vcode(company_id, channel_id):
     mobile = fakerInstance.phone_number()
     print("mobile", mobile)
     mobile_platform = random.choice([0, 1])
@@ -106,13 +104,12 @@ def login(mobile, company_id, channel_id, mobile_platform, event_id):
         token = login_response_dict['data']['token']
         print("get vcode response: ", login_response_dict)
 
-    # 上传照片
-    print("上传照片开始")
-    front_image = image_generator.get_image_bytes('正面')
-    back_image = image_generator.get_image_bytes('背面')
-    oss.upload_file(str(mobile) + 'front', front_image)
-    oss.upload_file(str(mobile) + 'back', back_image)
-    print("上传照片结束")
+        # 上传照片
+        front_image = image_generator.get_image_bytes('正面')
+        back_image = image_generator.get_image_bytes('背面')
+        oss.upload_file(str(mobile) + 'front', front_image)
+        oss.upload_file(str(mobile) + 'back', back_image)
+
     return token
 
 
@@ -167,10 +164,10 @@ def bankcard_list(token, company_id, channel_id, mobile, event_id):
     return bankcard_list_response_dict
 
 
-def register(company_id,channel_id):
-    vcode_dict = vcode(company_id,channel_id)
+def register(company_id, channel_id):
+    vcode_dict = vcode(company_id, channel_id)
     mobile = vcode_dict.get("mobile")
     event_id = vcode_dict.get("event_id")
     mobile_platform = vcode_dict.get("mobile_platform")
     token = login(mobile, company_id, channel_id, mobile_platform, event_id)
-    return dict(mobile=mobile,event_id=event_id)
+    return dict(mobile=mobile, event_id=event_id, token=token)
