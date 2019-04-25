@@ -3,6 +3,7 @@ import hashlib
 import json
 import random
 import time
+from decimal import Decimal
 
 import faker
 import requests
@@ -180,16 +181,69 @@ def bankcard_list(token, company_id, channel_id, mobile, event_id):
     return bankcard_list_response_dict
 
 
-def bid_application_insert(company_id, channel_id, mobile, bankAccountId, productId, raiseAmount, event_id):
+def bid_application_insert(company_id, channel_id, mobile, bank_account_id, product_id, raise_amount, user_cid,
+                           event_id, gmt_create, user_id):
     """
     模拟申请进件
     """
     # 查询用户的绑定的卡
+    bank_card = convert.query(models.Bankcard, mobile=mobile, company_id=company_id, is_default=1).first()
+
+    # 查询申请的产品信息
+    product = convert.query(models.Product, company_id=company_id, product_id=product_id, is_enabled=1).first()
+
+    # 查询渠道
+    channel = convert.query(models.Channel, id=channel_id).one()
+
+    # 查询渠道
+    user_detail = convert.query(models.UserDetail, id=user_id).one()
 
     _version = "1.1.0"
-    bid = models.Bid()
-    bid.bank_account_number
+    _bid_id = my_snow().get_next_id()
+    # 创建bid表
 
+    bid = models.Bid()
+    bid.id = _bid_id
+    bid.gmt_create = gmt_create
+    bid.gmt_modified = gmt_create
+    bid.is_deleted = 0
+    bid.bank_account_number = bank_card.get("bank_account_number")
+    bid.bank_account_id = bank_account_id
+    bid.amount = Decimal(product.get("amount")) + raise_amount
+    bid.period = product.get("period_day")
+    bid.product_id = product.get("id")
+    bid.raise_amount = raise_amount
+    bid.channel_id = channel_id
+    bid.channel_label = channel.get("label")
+    bid.channel_name = channel.get("name")
+    bid.cid = user_cid
+    bid.mobile = mobile
+    bid.name = user_detail.get("name")
+    bid.company_id = company_id
+    bid.ip_address = fakerInstance.ipv4()
+    bid.status = 0
+    convert.add_one(bid)
+
+    # 绑定eventId和bid
+    event = models.Event()
+    event.id = event_id
+    event.gmt_create = gmt_create
+    event.gmt_modified = gmt_create
+    event.is_deleted = 0
+    event.bid_id = _bid_id
+    event.company_id = company_id
+    event.channel_id = channel_id
+    event.mobile = mobile
+    event.is_expired = 0
+    convert.add_one(event)
+
+    # 修改user_detail数据
+    user_detail.category = 1
+    user_detail.gmt_modified = gmt_create
+    user_detail.first_apply_time = gmt_create
+    convert.update_table(models.UserDetail, user_id=user_id)
+
+    # 创建userApplyInfo记录
 
 def register(company_id, channel_id):
     """
