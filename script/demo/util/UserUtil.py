@@ -61,15 +61,11 @@ birth_days = datetime.datetime.strftime(
 
 # class WebDemo(object):
 
-def vcode():
+def vcode(company_id,channel_id):
     mobile = fakerInstance.phone_number()
     print("mobile", mobile)
-    # _channel_id = random.randint(0, 15)
-    channel_id = 0
-    print("channel_id", channel_id)
     mobile_platform = random.choice([0, 1])
     print("mobile_platform", mobile_platform)
-    company_id = "200"
     cid = generate()
     print("cid", cid)
     name = create_name_by_cid(cid)
@@ -171,12 +167,10 @@ def bankcard_list(token, company_id, channel_id, mobile, event_id):
     return bankcard_list_response_dict
 
 
-def register():
-    vcode_dict = vcode()
+def register(company_id,channel_id):
+    vcode_dict = vcode(company_id,channel_id)
     mobile = vcode_dict.get("mobile")
-    company_id = vcode_dict.get("company_id")
-    channel_id = vcode_dict.get("channel_id")
     event_id = vcode_dict.get("event_id")
     mobile_platform = vcode_dict.get("mobile_platform")
     token = login(mobile, company_id, channel_id, mobile_platform, event_id)
-    return dict(mobile=mobile,event_id=event_id,token=token)
+    return dict(mobile=mobile,event_id=event_id)
