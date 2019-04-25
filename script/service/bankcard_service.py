@@ -60,6 +60,7 @@ def insert(mobile, company_id):
     if user is None:
         return
     print(user)
+    user_detail = convert.query(models.UserDetail, mobile=mobile, company_id=company_id).first()
     bankcard_data = convert.query(models.Bankcard, mobile=mobile, company_id=company_id, is_default=1).first()
     payment_channel = convert.query(models.PaymentChannel, company_id=company_id, is_default=1).first()
     card_no = generate()
@@ -95,6 +96,9 @@ def insert(mobile, company_id):
         bankcard.payment_channel = payment_channel.payment_channel_name if payment_channel is not None else "富有"  # '支付渠道 富有, 易宝'
         bankcard.is_binding = 1  # '1 已绑定  0 已经解绑',
         bankcard.mchntcd = payment_channel.mchntcd
+    if user_detail.bank_account_id is None:
+        update = {'bank_account_id': card_no}
+        convert.update_table(models.UserDetail, update, mobile=mobile, company_id=company_id)
     return convert.add_one(bankcard)
 
 # insert(15180279540, 1)
