@@ -154,19 +154,6 @@ class PaymentChannel(Base, TableBase):
     priority = Column(Integer, nullable=True)
 
 
-class PaymentChannel(Base, TableBase):
-    __tablename__ = 'payment_channel'
-
-    company_id = Column(Integer, nullable=True)
-    payment_channel_id = Column(Integer, nullable=True)
-    payment_channel_name = Column(String, nullable=True)
-    mchntcd = Column(String, nullable=True)
-    is_enabled = Column(Integer, nullable=True)
-    type = Column(Integer, nullable=True)
-    is_default = Column(Integer, nullable=True)
-    priority = Column(Integer, nullable=True)
-
-
 class Bid(Base, TableBase):
     __tablename__ = 'bid'
 
@@ -277,6 +264,61 @@ class Transaction(Base, TableBase):
     channel_id = Column(Integer, nullable=True)
     transaction_time = Column(DateTime, nullable=True)
     comment = Column(String, nullable=True)
+
+
+class Bill(Base, TableBase):
+    __tablename__ = 'bill'
+
+    bid_id = Column(Integer, nullable=True)
+    user_id = Column(Integer, nullable=True)
+    product_id = Column(Integer, nullable=True)
+    company_id = Column(Integer, nullable=True)
+    channel_id = Column(Integer, nullable=True)
+    status = Column(Integer, nullable=True)
+    deduct_time = Column(DateTime, nullable=True)
+    deduct_operator = Column(Integer, nullable=True)
+    loan_amount = Column(DECIMAL, nullable=True)
+    period = Column(Integer, nullable=True)
+    daily_interest_rate = Column(DECIMAL, nullable=True)
+    manage_fee = Column(DECIMAL, nullable=True)
+    bad_bid_period = Column(Integer, nullable=True)
+    repayment_time = Column(DateTime, nullable=True)
+    repayment_amount = Column(DECIMAL, nullable=True)
+    repayment_corpus = Column(DECIMAL, nullable=True)
+    repayment_interest = Column(DECIMAL, nullable=True)
+    extension_period = Column(Integer, nullable=True)
+    extension_interest_rate = Column(DECIMAL, nullable=True)
+    extension_interest = Column(DECIMAL, nullable=True)
+    extension_manage_fee = Column(DECIMAL, nullable=True)
+    extension_repayment_time = Column(DateTime, nullable=True)
+    extension_repayment_amount = Column(DECIMAL, nullable=True)
+    extension_returned_amount = Column(DECIMAL, nullable=True)
+    total_overdue_days = Column(Integer, nullable=True)
+    overdue_interest_rate = Column(DECIMAL, nullable=True)
+    overdue_manage_fee = Column(DECIMAL, nullable=True)
+    overdue_fine = Column(DECIMAL, nullable=True)
+    waive_amount = Column(DECIMAL, nullable=True)
+    mark_overdue_time = Column(DateTime, nullable=True)
+    mark_bad_time = Column(DateTime, nullable=True)
+    current_repayment_corpus = Column(DECIMAL, nullable=True)
+    current_manage_fee = Column(DECIMAL, nullable=True)
+    current_total_daily_interest = Column(DECIMAL, nullable=True)
+    current_overdue_manage_fee = Column(DECIMAL, nullable=True)
+    current_overdue_fine = Column(DECIMAL, nullable=True)
+    current_repayment_time = Column(DateTime, nullable=True)
+    current_repayment_amount = Column(DECIMAL, nullable=True)
+    current_returned_amount = Column(DECIMAL, nullable=True)
+    current_extension_period = Column(Integer, nullable=True)
+    current_extension_interest = Column(DECIMAL, nullable=True)
+    current_extension_manage_fee = Column(DECIMAL, nullable=True)
+    current_extension_repayment_amount = Column(DECIMAL, nullable=True)
+    real_repayment_time = Column(DateTime, nullable=True)
+    real_repayment_corpus = Column(DECIMAL, nullable=True)
+    real_repayment_interest = Column(DECIMAL, nullable=True)
+    real_repayment_amount = Column(DECIMAL, nullable=True)
+    interest_collect_style = Column(Integer, nullable=True)
+    prepayment_amount = Column(DECIMAL, nullable=True)
+    last_update_time = Column(DateTime, nullable=True)
 
 
 # 初始化数据库连接:
