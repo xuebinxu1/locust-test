@@ -3,7 +3,6 @@ import sys, os
 sys.path.append(os.getcwd())
 import threading
 import time
-from script.credit.moxie_data import data
 from script.credit.youdun_data import get_youdun_recognization
 from locust import HttpLocust, TaskSequence, task, seq_task
 from script.credit.moxie_callback_data import data as moxie_callback_data, headers as moxie_callback_headers
