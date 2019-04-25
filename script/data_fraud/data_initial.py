@@ -28,6 +28,8 @@ def initial_all_user(is_read_file=False):
         user_df = pd.DataFrame(registered_users, columns=['registered'])
         user_df['registered_times'] = registered_times
         user_df['company_id'] = 110
+        # initial channel id
+        user_df = initial_user_channel(user_df)
         user_df['verified'] = initial_verified_users(total_user, data_fraud.USER_VERIFIED_RATE)
         user_df['carrier'] = initial_carrier_users(total_user, data_fraud.USER_CARRIER_RATE)
         user_df['bank_card'] = initial_bank_card_users(total_user, data_fraud.USER_BANK_CARD_RATE)
@@ -47,14 +49,29 @@ def initial_all_user(is_read_file=False):
         return user_df
 
 
-def initial_user_channel(df, channel_id):
+def initial_user_channel(df):
     """
 
-    :param df:
-    :param channel_id:
+    :param df: dataframe of all users
     :return:
     """
-
+    total_users = df.shape[0]
+    default_channel_user_count = round(total_users * data_fraud.DEFAULT_CHANNEL_RATE)
+    zy8_channel_user_count = round(total_users * data_fraud.ZY8_CHANNEL_RATE)
+    zy2_channel_user_count = round(total_users * data_fraud.ZY2_CHANNEL_RATE)
+    zy7_channel_user_count = round(total_users * data_fraud.ZY7_CHANNEL_RATE)
+    xp1_channel_user_count = round(total_users * data_fraud.XP1_CHANNEL_RATE)
+    ay1_channel_user_count = round(total_users * data_fraud.AY1_CHANNEL_RATE)
+    xl1_channel_user_count = total_users - default_channel_user_count - zy8_channel_user_count - zy2_channel_user_count - zy7_channel_user_count - xp1_channel_user_count - ay1_channel_user_count
+    default_channel_id_list = [data_fraud.DEFAULT_CHANNEL_ID for _ in range(default_channel_user_count)]
+    zy8_channel_id_list = [data_fraud.ZY8_CHANNEL_ID for _ in range(zy8_channel_user_count)]
+    zy2_channel_id_list = [data_fraud.ZY2_CHANNEL_ID for _ in range(zy2_channel_user_count)]
+    zy7_channel_id_list = [data_fraud.ZY7_CHANNEL_ID for _ in range(zy7_channel_user_count)]
+    xp1_channel_id_list = [data_fraud.XP1_CHANNEL_ID for _ in range(xp1_channel_user_count)]
+    ay1_channel_id_list = [data_fraud.AY1_CHANNEL_ID for _ in range(ay1_channel_user_count)]
+    xl1_channel_id_list = [data_fraud.XL1_CHANNEL_ID for _ in range(xl1_channel_user_count)]
+    df['channel_id'] = default_channel_id_list + zy8_channel_id_list + zy2_channel_id_list + zy7_channel_id_list + xp1_channel_id_list + ay1_channel_id_list + xl1_channel_id_list
+    return df
 
 def initial_verified_users(total_user, verified_rate):
     """
