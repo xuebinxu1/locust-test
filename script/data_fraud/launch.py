@@ -8,6 +8,7 @@ from script.demo.util import UserUtil
 from multiprocessing import Process, Manager
 from utils import bid_apply_time
 import time
+from script.service import autonym_service, bankcard_service
 
 
 def launch():
@@ -53,9 +54,9 @@ def registered(df, registered, share_dict={}):
             company_id = int(registered_df[registered_df[user_index_column] == user_index][company_id_column])
             channel_id = int(registered_df[registered_df[user_index_column] == user_index][channel_id_column])
             # 注册
-            mobile, event_id = UserUtil.register(company_id, channel_id)
+            mobile, event_id, token = UserUtil.register(company_id, channel_id)
             # 认证
-            certifications(event_id)
+            certifications(mobile, event_id, token, company_id)
             share_dict[user_index] = start
             print(start, user_index)
             total += 1
@@ -69,9 +70,23 @@ def registered(df, registered, share_dict={}):
     print(total)
 
 
-def certifications(event_id):
-    print(event_id)
+def certifications(event_id, mobile, token, company_id):
+    # 实名认证
+    autonym_service.request_profile_validation(event_id, mobile, token)
+    # 运营商认证
     pass
+    # 银行卡认证
+    bankcard_service.insert(mobile, company_id)
+
+
+def loan(df, share_event_id_dict, share_bid_dict):
+    """
+
+    :param df:
+    :param share_event_id_dict:
+    :param share_bid_dict:
+    :return:
+    """
 
 
 def verified(df, event_id, verified):
@@ -132,7 +147,7 @@ def bid_apply(df, bid_apply, share_dict):
             user_index = user_mapping_dict[start]
             # 进件
             event_id = share_dict[user_index]
-            
+
             share_dict[user_index] = start
             print(start, user_index)
         elif datetime.datetime.now().hour == 23 and datetime.datetime.now().minute == 1:
