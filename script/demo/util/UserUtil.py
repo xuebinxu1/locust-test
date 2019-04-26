@@ -9,7 +9,7 @@ import faker
 import requests
 
 from config import constant
-from script.credit import image_generator
+from script.credit import image_generator, sdk_data
 from script.credit.cid_generator import generate as cid_generate
 from utils import oss, convert, models
 from utils.models import User, UserDetail
@@ -140,10 +140,10 @@ def carrier(token, company_id, channel_id, mobile, event_id):
     header = {"token": token}
 
     # sdk上传
-    # sdk_upload_data = dict(eventId=event_id, data=sdk_data)
-    # sdk_response = client.post("http://47.98.129.81:20997/rum/test/sdk/saveData", sdk_upload_data)
-    # if sdk_response.status_code == 200:
-    #     print(str(mobile) + "sdk数据发送成功")
+    sdk_upload_data = dict(eventId=event_id, data=sdk_data)
+    sdk_response = requests.post("http://47.98.129.81:20997/rum/test/sdk/saveData", sdk_upload_data)
+    if sdk_response.status_code == 200:
+        print(str(mobile) + "sdk数据发送成功")
 
     print("moxie carrier request")
 
@@ -244,6 +244,50 @@ def bid_application_insert(company_id, channel_id, mobile, bank_account_id, prod
     convert.update_table(models.UserDetail, user_id=user_id)
 
     # 创建userApplyInfo记录
+    user_apply_info = models.UserApplyInfo()
+    user_apply_info.id = my_snow().get_next_id()
+    user_apply_info.gmt_create = user_detail.gmt_create
+    user_apply_info.gmt_modified = user_detail.gmt_modified
+    user_apply_info.is_deleted = user_detail.is_deleted
+    user_apply_info.cert_item = user_detail.cert_item
+    user_apply_info.user_id = user_detail.user_id
+    user_apply_info.company_id = user_detail.company_id
+    user_apply_info.cid = user_detail.cid
+    user_apply_info.mobile = user_detail.mobile
+    user_apply_info.name = user_detail.name
+    user_apply_info.password = user_detail.password
+    user_apply_info.channel_id = user_detail.channel_id
+    user_apply_info.channel_name = user_detail.channel_name
+    user_apply_info.province = user_detail.province
+    user_apply_info.city = user_detail.city
+    user_apply_info.address = user_detail.address
+    user_apply_info.gender = user_detail.gender
+    user_apply_info.nationality = user_detail.nationality
+    user_apply_info.birthday = user_detail.birthday
+    user_apply_info.marital_status = user_detail.marital_status
+    user_apply_info.income_level = user_detail.income_level
+    user_apply_info.education_level = user_detail.education_level
+    user_apply_info.bank_account_id = user_detail.bank_account_id
+    user_apply_info.category = user_detail.category
+    user_apply_info.mobile_platform = user_detail.mobile_platform
+    user_apply_info.operator_id = user_detail.operator_id
+    user_apply_info.first_apply_time = user_detail.first_apply_time
+    user_apply_info.first_deduct_time = user_detail.first_deduct_time
+    user_apply_info.loan_amount = user_detail.loan_amount
+    user_apply_info.raise_amount = user_detail.raise_amount
+    user_apply_info.emrg_contact_name_a = user_detail.emrg_contact_name_a
+    user_apply_info.emrg_contact_name_b = user_detail.emrg_contact_name_b
+    user_apply_info.emrg_contact_mobile_a = user_detail.emrg_contact_mobile_a
+    user_apply_info.emrg_contact_mobile_b = user_detail.emrg_contact_mobile_b
+    user_apply_info.idcard_front_img = user_detail.idcard_front_img
+    user_apply_info.idcard_back_img = user_detail.idcard_back_img
+    user_apply_info.thirdparty_data = user_detail.thirdparty_data
+    user_apply_info.raise_amount = user_detail.raise_comment
+    user_apply_info.update_count = user_detail.update_count
+    user_apply_info.name_mirror = user_detail.name_mirror
+    user_apply_info.raise_amount_sign = user_detail.raise_amount_sign
+    convert.add_one(user_apply_info)
+
 
 def register(company_id, channel_id):
     """
