@@ -18,13 +18,14 @@ def launch():
     user_df = initial_all_user()
     # 初始化Manager字典，用于进程间的数据共享
     with Manager() as manager:
-        share_dict = manager.dict()
+        share_event_id_dict = manager.dict()
         p_list = []
-        registered_process = Process(target=registered, args=(user_df, 'registered', share_dict))
+        registered_process = Process(target=registered, args=(user_df, 'registered', share_event_id_dict))
         registered_process.start()
         p_list.append(registered_process)
         for res in p_list:
             res.join()
+        print(share_event_id_dict)
 
 
 def registered(df, registered, share_dict={}):
@@ -51,8 +52,11 @@ def registered(df, registered, share_dict={}):
             user_index = user_mapping_dict[start]
             company_id = int(registered_df[registered_df[user_index_column] == user_index][company_id_column])
             channel_id = int(registered_df[registered_df[user_index_column] == user_index][channel_id_column])
-            # mobile, event_id = UserUtil.register(company_id, channel_id)
-            # share_dict[user_index] = event_id
+            # 注册
+            mobile, event_id = UserUtil.register(company_id, channel_id)
+            # 认证
+            certifications(event_id)
+            share_dict[user_index] = start
             print(start, user_index)
             total += 1
         elif datetime.datetime.now().hour == 23 and datetime.datetime.now().minute == 1:
@@ -63,6 +67,11 @@ def registered(df, registered, share_dict={}):
         time.sleep(1)
         start = datetime.datetime.strptime(start, "%Y-%m-%d %H:%M:%S") + datetime.timedelta(seconds=1)
     print(total)
+
+
+def certifications(event_id):
+    print(event_id)
+    pass
 
 
 def verified(df, event_id, verified):
@@ -101,16 +110,39 @@ def bank_card(df, event_id, bank_card):
     bank_card_df.apply(lambda user: print(user[event_id]))
 
 
-def bid_apply(df, event_id, bid_apply):
+def bid_apply(df, bid_apply, share_dict):
     """
     用户进件
     :param df: dataframe of all users
-    :param event_id:  column name of event_id
     :param bid_apply:  column name of bank_card
+    :param share_dict: 进程间共享的数据
     :return: 
     """
+    # 筛选出进件单子
     bid_apply_df = df[df[bid_apply] == 1]
-    df['bid_id'] = bid_apply_df.apply(lambda user: print(user[event_id], user['bid_apply_times']), axis=1)
+    bid_apply_times_column = 'bid_apply_times'
+    user_index_column = 'user_index'
+    bid_apply_time_list = bid_apply_df[bid_apply_times_column].apply(lambda time: str(time)).tolist()
+    user_index_list = bid_apply_df[user_index_column].tolist()
+    user_mapping_dict = dict(zip(bid_apply_time_list, user_index_list))
+    start = bid_apply_time.get_early_morning_time()
+    while True:
+        start = start.strftime("%Y-%m-%d %H:%M:%S")
+        if start in bid_apply_time_list:
+            user_index = user_mapping_dict[start]
+            # 进件
+            event_id = share_dict[user_index]
+            
+            share_dict[user_index] = start
+            print(start, user_index)
+        elif datetime.datetime.now().hour == 23 and datetime.datetime.now().minute == 1:
+            # 23点后退出
+            break
+        elif datetime.datetime.strptime(start, "%Y-%m-%d %H:%M:%S").hour == 23:
+            break
+        time.sleep(1)
+        start = datetime.datetime.strptime(start, "%Y-%m-%d %H:%M:%S") + datetime.timedelta(seconds=1)
+        pass
     return df
 
 
