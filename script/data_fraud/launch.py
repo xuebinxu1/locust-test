@@ -2,13 +2,12 @@
 # @Author:  LSY
 # @Date:    2019/4/24
 from script.data_fraud.data_initial import initial_all_user
-import schedule
 import datetime
-from script.demo.util import UserUtil
+from script.demo.util import registered_and_bid_apply_service
 from multiprocessing import Process, Manager
 from utils import bid_apply_time
 import time
-from script.service import autonym_service, bankcard_service
+from script.data_fraud.service import autonym_service, bankcard_service
 
 
 def launch():
@@ -54,7 +53,7 @@ def registered(df, registered, share_dict={}):
             company_id = int(registered_df[registered_df[user_index_column] == user_index][company_id_column])
             channel_id = int(registered_df[registered_df[user_index_column] == user_index][channel_id_column])
             # 注册
-            mobile, event_id, token = UserUtil.register(company_id, channel_id)
+            mobile, event_id, token = registered_and_bid_apply_service.register(company_id, channel_id)
             # 认证
             certifications(mobile, event_id, token, company_id)
             share_dict[user_index] = start
@@ -75,6 +74,7 @@ def certifications(event_id, mobile, token, company_id):
     autonym_service.request_profile_validation(event_id, mobile, token)
     # 运营商认证
     pass
+
     # 银行卡认证
     bankcard_service.insert(mobile, company_id)
 

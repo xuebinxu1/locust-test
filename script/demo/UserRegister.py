@@ -1,8 +1,8 @@
 # -*- coding: utf-8 -*-
-from script.demo.util.UserUtil import bid_application_insert
-from script.demo.util.UserUtil import register_insert
-from script.service.autonym_service import request_profile_validation
-from script.service.user_certification_service import insert_operator, insert_bankcard
+from script.data_fraud.service.registered_and_bid_apply_service import bid_application_insert
+from script.data_fraud.service.registered_and_bid_apply_service import register_insert
+from script.data_fraud.service.autonym_service import request_profile_validation
+from script.data_fraud.service.user_certification_service import insert_operator, insert_bankcard
 
 if __name__ == '__main__':
     # # 初始化数据

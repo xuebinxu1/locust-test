@@ -3,7 +3,7 @@ import config.constant as constant
 from script.credit.cid_generator import generate as cid_generate
 import requests
 
-from script.demo.util.UserUtil import fakerInstance, create_name_by_cid
+from script.demo.util.registered_and_bid_apply_service import fakerInstance, create_name_by_cid
 
 
 def request_profile_validation(company_id, channel_id, event_id, mobile, token):
