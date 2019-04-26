@@ -48,7 +48,6 @@ def insert_operator(mobile, company_id):
     :return:
     """
     user = convert.query(models.User, mobile=mobile, company_id=company_id).first()
-    print(user)
     user_certification = models.UserCertification()
     user_certification.id = my_snow().get_next_id()
     user_certification.channel_id = user.register_channel_id
@@ -71,7 +70,6 @@ def insert_bankcard(mobile, company_id):
     :return:
     """
     user = convert.query(models.User, mobile=mobile, company_id=company_id).first()
-    print(user)
     user_certification = models.UserCertification()
     user_certification.id = my_snow().get_next_id()
     user_certification.channel_id = user.register_channel_id

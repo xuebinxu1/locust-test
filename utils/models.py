@@ -266,6 +266,55 @@ class Transaction(Base, TableBase):
     comment = Column(String, nullable=True)
 
 
+class Channel(Base, TableBase):
+    __tablename__ = 'channel'
+
+    company_id = Column(Integer, nullable=True)
+    name = Column(String, nullable=True)
+    label = Column(String, nullable=True)
+    link = Column(String, nullable=True)
+    payment_type = Column(Integer, nullable=True)
+    template_type = Column(String, nullable=True)
+    is_enabled = Column(Integer, nullable=True)
+    deduct_percent = Column(DECIMAL, nullable=True)
+
+
+class Product(Base, TableBase):
+    __tablename__ = 'product'
+
+    company_id = Column(Integer, nullable=True)
+    name = Column(String, nullable=True)
+    daily_interest_rate = Column(DECIMAL, nullable=True)
+    annually_interest_rate = Column(DECIMAL, nullable=True)
+    amount = Column(DECIMAL, nullable=True)
+    period_day = Column(Integer, nullable=True)
+    manage_fee = Column(DECIMAL, nullable=True)
+    overdue_manage_fee = Column(DECIMAL, nullable=True)
+    overdue_interest_rate = Column(DECIMAL, nullable=True)
+    bad_bid_deadline = Column(Integer, nullable=True)
+    cut_interest_fee = Column(DECIMAL, nullable=True)
+    is_prepayment_enabled = Column(Integer, nullable=True)
+    is_enabled = Column(Integer, nullable=True)
+    description = Column(String, nullable=True)
+    repayment_type = Column(Integer, nullable=True)
+    name_image_filename = Column(String, nullable=True)
+    message_service_fee_rate = Column(DECIMAL, nullable=True)
+    account_manage_fee_rate = Column(DECIMAL, nullable=True)
+    breach_account_fee_rate = Column(DECIMAL, nullable=True)
+    interest_collect_style = Column(Integer, nullable=True)
+    max_loan_amount = Column(DECIMAL, nullable=True)
+    composite_daily_rate = Column(DECIMAL, nullable=True)
+    composite_overdue_daily_rate = Column(DECIMAL, nullable=True)
+    manage_fee_style = Column(Integer, nullable=True)
+    collect_scale = Column(DECIMAL, nullable=True)
+    is_auto = Column(Integer, nullable=True)
+    overdue_number = Column(Integer, nullable=True)
+    repeated_loan_scope_A = Column(String, nullable=True)
+    repeated_loan_scope_B = Column(String, nullable=True)
+    raise_amount_A = Column(DECIMAL, nullable=True)
+    raise_amount_B = Column(DECIMAL, nullable=True)
+
+
 class Bill(Base, TableBase):
     __tablename__ = 'bill'
 
@@ -322,6 +371,7 @@ class Bill(Base, TableBase):
 
 
 # 初始化数据库连接:
-engine = create_engine("mysql+pymysql://root:Cisco123@10.10.10.200:33061/sake")
+# engine = create_engine("mysql+pymysql://root:Cisco123@10.10.10.200:33061/sake")
+engine = create_engine('mysql+mysqldb://sake_demo:3imZYs7Vgm1EzQKp@rm-bp17kkg9v94pvnmla1o.mysql.rds.aliyuncs.com:3306/staging_sake?charset=utf8')
 # 创建DBSession类型:
 DBSession = sessionmaker(bind=engine)
