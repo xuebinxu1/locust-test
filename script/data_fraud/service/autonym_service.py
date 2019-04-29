@@ -2,8 +2,8 @@ import random
 import config.constant as constant
 from script.credit.cid_generator import generate as cid_generate
 import requests
-
-from script.demo.util.registered_and_bid_apply_service import fakerInstance, create_name_by_cid
+import json
+from script.data_fraud.service.registered_and_bid_apply_service import fakerInstance, create_name_by_cid
 
 
 def request_profile_validation(company_id, channel_id, event_id, mobile, token):
@@ -16,8 +16,6 @@ def request_profile_validation(company_id, channel_id, event_id, mobile, token):
     :param token:
     :return:
     """
-    # company_id = "200"
-    # channel_id = "0"
     education_level = random.randint(0, 3)
     marital_status = random.randint(0, 4)
     income_level = random.randint(0, 6)
@@ -49,13 +47,14 @@ def request_profile_validation(company_id, channel_id, event_id, mobile, token):
                             emrgContactNameB=emrg_contact_name_b, emrgContactMobileB=emrg_contact_mobile_b,
                             province=province, city=city, detailedAddress=address,
                             eventId=event_id)
-    url = constant.ICEWINE_BASE_URL_200 + '/profile/upload'
+    url = constant.ICEWINE_BASE_URL_STAGING + '/profile/upload'
     # files:接口中需要上传文件则需要用到该参数
-    r = requests.post(url, data=profile_req_body, headers=headers)
+    profile = requests.post(url, data=profile_req_body, headers=headers)
     # print(r.text.encode('utf-8'))
-    print(str(mobile) + "实名认证请求")
-    dict_data = dict()
-    dict_data['event_id'] = event_id
-    dict_data['mobile'] = mobile
-    dict_data['token'] = token
-    return dict_data
+    profile_json = json.loads(profile.content)
+    if profile_json.get('code') == '200':
+        print(str(mobile) + "实名认证成功！")
+        return cid, name
+    else:
+        print(profile_json)
+        print(str(mobile) + "实名认证失败")

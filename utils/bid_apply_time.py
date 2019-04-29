@@ -9,7 +9,7 @@ import logging
 
 
 time_normal_format = "%Y-%m-%d %H:%M:%S"
-registered_normal_start_time = '09:00:00'
+registered_normal_start_time = '08:00:00'
 registered_normal_end_time = '15:00:00'
 
 
@@ -69,7 +69,7 @@ def get_other_period_time(total_person, normal_period_person, splite_rate=0.8):
     """
     other_period_person_count = total_person - normal_period_person
     date_list = pd.date_range('01:00:00', registered_normal_start_time, freq='S').tolist()
-    date_list1 = pd.date_range(registered_normal_end_time, '23:00:00', freq='S').tolist()
+    date_list1 = pd.date_range(registered_normal_end_time, '22:00:00', freq='S').tolist()
     early_operate_person_count = round(other_period_person_count * (1-splite_rate))
     late_operate_person_count = other_period_person_count - early_operate_person_count
     logging.info("get not normal time. total unnormal person: %s\tearly period person: %s\tlate period person: %s" % (total_person, early_operate_person_count, late_operate_person_count))

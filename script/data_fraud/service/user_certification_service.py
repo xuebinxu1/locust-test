@@ -1,5 +1,8 @@
 from utils.my_snowflake import my_snow
 from utils import convert, models
+import json
+import requests
+from config.constant import RUM_BASE_URL_STAGING
 
 
 def select():
@@ -110,3 +113,23 @@ def update_cert_item_of_user_apply_info(mobile, company_id, cert_item_list):
     return convert.update_table(models.UserApplyInfo, update, mobile=mobile, company_id=company_id)
 
 # update_cert_item_of_user_apply_info(15180279540, 1, ['0', '1', '3'])
+
+
+def carrier_verified(mobile, event_id):
+    from script.credit.moxie_data import callback_data, bill_data, report_data
+    bill_data = json.loads(bill_data)
+    report_data = json.loads(report_data)
+    callback_data = json.loads(callback_data)
+    callback_data['mobile'] = mobile
+    callback_data['bill'] = bill_data
+    callback_data['report'] = report_data
+    callback_data['event_id'] = event_id
+    try:
+        bill_response = requests.post(RUM_BASE_URL_STAGING + '/test/callback/moxie-carrier/data',
+                                         data=json.dumps(callback_data))
+        if bill_response.status_code == 201:
+            print("魔蝎回调成功.event_id: %s" % event_id)
+        else:
+            print("魔蝎回调失败.event_id: %s" % event_id)
+    except Exception as e:
+        print("魔蝎回调失败.event_id: %s" % event_id)
