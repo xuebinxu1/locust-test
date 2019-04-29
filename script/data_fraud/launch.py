@@ -6,7 +6,6 @@ import datetime
 from script.data_fraud.service import registered_and_bid_apply_service
 from multiprocessing import Process, Manager
 from utils import bid_apply_time
-import time
 from script.data_fraud.service import autonym_service
 
 
@@ -16,26 +15,25 @@ def launch():
     """
     # 初始化用户数据
     user_df = initial_all_user()
-    registered(user_df, 'registered', {})
     # 初始化Manager字典，用于进程间的数据共享
     with Manager() as manager:
         share_event_id_dict = manager.dict()
         p_list = []
         registered_process = Process(target=registered, args=(user_df, 'registered', share_event_id_dict))
-        loan_process = Process(target=loan, args=(user_df, 'loan', share_event_id_dict))
-        reject_process = Process(target=reject, args=(user_df, 'reject', share_event_id_dict))
-        repayment_process = Process(target=repayment, args=(user_df, 'repayment', share_event_id_dict))
-        overdue_and_repayment_process = Process(target=overdue_and_repayment, args=(user_df, share_event_id_dict))
+        # loan_process = Process(target=loan, args=(user_df, 'loan', share_event_id_dict))
+        # reject_process = Process(target=reject, args=(user_df, 'reject', share_event_id_dict))
+        # repayment_process = Process(target=repayment, args=(user_df, 'repayment', share_event_id_dict))
+        # overdue_and_repayment_process = Process(target=overdue_and_repayment, args=(user_df, share_event_id_dict))
         registered_process.start()
-        loan_process.start()
-        reject_process.start()
-        repayment_process.start()
-        overdue_and_repayment_process.start()
+        # loan_process.start()
+        # reject_process.start()
+        # repayment_process.start()
+        # overdue_and_repayment_process.start()
         p_list.append(registered_process)
-        p_list.append(loan_process)
-        p_list.append(reject_process)
-        p_list.append(repayment_process)
-        p_list.append(overdue_and_repayment_process)
+        # p_list.append(loan_process)
+        # p_list.append(reject_process)
+        # p_list.append(repayment_process)
+        # p_list.append(overdue_and_repayment_process)
         for res in p_list:
             res.join()
         print(share_event_id_dict)
@@ -66,7 +64,7 @@ def registered(df, registered, share_dict=None):
     user_mapping_dict = dict(zip(registered_times, user_index_list))
     start = bid_apply_time.get_early_morning_time()
     total = 0
-    is_end_list = registered_times
+    is_end_list = registered_times[:]
     largest_time = get_largest_time(is_end_list)
     while True:
         start = start.strftime("%Y-%m-%d %H:%M:%S")
@@ -139,7 +137,7 @@ def loan(df, loan, share_dict=None):
     user_index_list = loan_df[user_index_column].tolist()
     user_mapping_dict = dict(zip(loan_times_list, user_index_list))
     start = bid_apply_time.get_early_morning_time()
-    is_end_list = loan_times_list
+    is_end_list = loan_times_list[:]
     largest_time = get_largest_time(is_end_list)
     while True:
         start = start.strftime("%Y-%m-%d %H:%M:%S")
@@ -149,7 +147,7 @@ def loan(df, loan, share_dict=None):
             pass
         elif start > largest_time:
             break
-        time.sleep(1)
+        # time.sleep(1)
         start = datetime.datetime.strptime(start, "%Y-%m-%d %H:%M:%S") + datetime.timedelta(seconds=1)
 
 
@@ -172,7 +170,7 @@ def reject(df, reject, share_dict=None):
     user_index_list = reject_df[user_index_column].tolist()
     user_mapping_dict = dict(zip(reject_times_list, user_index_list))
     start = bid_apply_time.get_early_morning_time()
-    is_end_list = reject_times_list
+    is_end_list = reject_times_list[:]
     largest_time = get_largest_time(is_end_list)
     while True:
         start = start.strftime("%Y-%m-%d %H:%M:%S")
@@ -182,9 +180,8 @@ def reject(df, reject, share_dict=None):
             pass
         elif start > largest_time:
             break
-        time.sleep(1)
+        # time.sleep(1)
         start = datetime.datetime.strptime(start, "%Y-%m-%d %H:%M:%S") + datetime.timedelta(seconds=1)
-    pass
 
 
 def repayment(df, repayment, share_dict=None):
@@ -207,7 +204,7 @@ def repayment(df, repayment, share_dict=None):
     user_index_list = repayment_df[user_index_column].tolist()
     user_mapping_dict = dict(zip(repayment_times_list, user_index_list))
     start = bid_apply_time.get_early_morning_time()
-    is_end_list = repayment_times_list
+    is_end_list = repayment_times_list[:]
     largest_time = get_largest_time(is_end_list)
     while True:
         start = start.strftime("%Y-%m-%d %H:%M:%S")
@@ -219,7 +216,7 @@ def repayment(df, repayment, share_dict=None):
             pass
         elif start > largest_time:
             break
-        time.sleep(1)
+        # time.sleep(1)
         start = datetime.datetime.strptime(start, "%Y-%m-%d %H:%M:%S") + datetime.timedelta(seconds=1)
 
 
@@ -254,7 +251,7 @@ def overdue_and_repayment(df, share_dict=None):
     times_list = overdue_within_3_days_repayment_times_list + overdue_4_to_7_days_repayment_times_list + overdue_8_to_30_days_repayment_times_list
     user_mapping_dict = dict(zip(times_list, user_index_list))
     start = bid_apply_time.get_early_morning_time()
-    is_end_list = times_list
+    is_end_list = times_list[:]
     largest_time = get_largest_time(is_end_list)
     while True:
         start = start.strftime("%Y-%m-%d %H:%M:%S")
@@ -265,7 +262,7 @@ def overdue_and_repayment(df, share_dict=None):
             # 还款
         elif start > largest_time:
             break
-        time.sleep(1)
+        # time.sleep(1)
         start = datetime.datetime.strptime(start, "%Y-%m-%d %H:%M:%S") + datetime.timedelta(seconds=1)
 
 
@@ -290,7 +287,8 @@ def get_largest_time(times_list):
     """
     if times_list is None:
         return None
-    return times_list.sort(reverse=True)[0]
+    times_list.sort(reverse=True)
+    return times_list[0]
 
 
 if __name__ == '__main__':
