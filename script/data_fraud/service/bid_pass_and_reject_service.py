@@ -103,6 +103,12 @@ def loan_audit_success(event_id, user='admin', password='admin', comment=''):
         print("granting failed, bidId: ", bid_id)
     else:
         print("granting success ")
+    fuyou_data = dict(eventId = event_id)
+    fuyou_loan_result = requests.post(constant.RUM_BASE_URL_STAGING+'/fuioucallback/data/fraud/success',data=fuyou_data)
+    if fuyou_loan_result.status_code != 200:
+        print("loan false: ", event_id)
+    else:
+        print("loan success ")
 
 
 def loan_audit_false(event_id, user='admin', password='admin', comment=''):
@@ -168,8 +174,8 @@ def repayment(event_id,token):
 if __name__ == '__main__':
     account = 'admin'
     password = 'admin'
-    event_id = "200_0_18574122156_1556518636786"
-    loan_audit_false(event_id,account,password)
+    event_id = "200_0_15798405328_1556524087424"
+    loan_audit_success(event_id,account,password)
     print("111")
     # event_id = '200_0_14579578024_1556515363222'
     # token = '013f3e0b626303655395efbdacc929ba171a746322b14f5be93d3b61dbd06c91'
