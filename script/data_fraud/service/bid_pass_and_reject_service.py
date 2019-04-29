@@ -1,7 +1,9 @@
 from utils import convert, models
 from datetime import datetime
 from utils.my_snowflake import my_snow
-
+import requests
+from config import constant
+import json
 
 def bid_pass(bid_id):
     """
@@ -60,3 +62,111 @@ def bid_reject(event_id, bid_id):
     return convert.add_one(bid_workflow)
 
 # bid_reject('1_0_15180279540_1550665419452', 9549969456)
+
+def sake_login(user,password):
+    """
+    
+    :param user: 用户名
+    :param password: 密码
+    :return: 
+    """
+    login_req_body = dict(account=str(user), password=str(password))
+    login_response = requests.post(url=constant.SAKE_BASE_URL_STAGING + '/management/login', data=login_req_body)
+    login_response_header = login_response.headers
+
+    if login_response.status_code != 200:
+        login_response.failure("login failed, account: ", user)
+    else:
+        authorization = login_response_header["Authorization"]
+        print("get Authorization response: ", authorization)
+
+
+    return authorization
+
+def loan_audit_success(event_id,user,password,comment=''):
+    """
+    审核通过
+    :param event_id: 事件ID
+    :param authorization: 验签
+    :return:
+    """
+    authorization =sake_login(user,password)
+    event = convert.query(models.Event,event_id=event_id).first()
+    bid_id = event.bid_id
+    if bid_id is None:
+        print("no bidId")
+    granting_loan_body = dict(bidId = str(bid_id),comment = str(comment))
+    headers={"Authorization":authorization}
+    granting_loan = requests.post(url = constant.SAKE_BASE_URL_STAGING+ '/supervisor/granting/loans/pass',data=granting_loan_body,headers=headers)
+    if granting_loan.status_code != 200:
+        print("granting failed, bidId: ", bid_id)
+    else:
+        print("granting success ")
+
+def loan_audit_false(event_id,user,password,comment=''):
+    """
+    审核拒件
+    :param event_id: 事件ID
+    :param authorization: 验签
+    :return:
+    """
+    authorization =sake_login(user,password)
+    event = convert.query(models.Event,event_id=event_id).first()
+    bid_id = event.bid_id
+    if bid_id is None:
+        print("no bidId")
+    granting_loan_body = dict(bidId = str(bid_id),comment = str(comment))
+    headers={"Authorization":authorization}
+    granting_loan = requests.post(url = constant.SAKE_BASE_URL_STAGING+ '/supervisor/granting/loans/reject',data=granting_loan_body,headers=headers)
+    if granting_loan.status_code != 200:
+        print("granting failed, bidId: ", bid_id)
+    else:
+        print("granting reject ")
+
+
+def repayment(event_id,token):
+    """
+    还款成功
+    :param event_id: 事件ID
+    :param token:验签
+    :return:
+    """
+    event = convert.query(models.Event,event_id=event_id).first()
+    bid_id = event.bid_id
+    bid = convert.query(models.Bid,id=bid_id).first()
+    mobile = bid.mobile
+    company_id = bid.company_id
+    channel_id = bid.channel_id
+    bank_account_id = bid.bank_account_id
+    bill = convert.query(models.Bill,bid_id = bid_id,is_deleted='0').first()
+    repayment_amout = bill.repayment_amount
+    extension_repayment = 'false'
+    headers = {"Token":token}
+    sms_data = dict(mobile = str(mobile),companyId= str(company_id),channelId = str(channel_id),eventId = str(event_id),bidId = str(bid_id),bankAccountId = str(bank_account_id),repaymentAmount=str(repayment_amout))
+    sms_result = requests.post(constant.ICEWINE_BASE_URL_STAGING+'/repayment/sms',data = sms_data,headers=headers)
+    if sms_result.status_code != 200:
+        print("sms failed, bidId: ", bid_id)
+    else:
+        print("sms reject ")
+    vcode = '0123'
+    repayment_data = dict(mobile = str(mobile),companyId= str(company_id),channelId = str(channel_id),eventId = str(event_id),bidId = str(bid_id),bankAccountId = str(bank_account_id),repaymentAmount=str(repayment_amout),vcode=vcode,extensionRepayment=extension_repayment)
+    repayment_result = requests.post(constant.ICEWINE_BASE_URL_STAGING+'/repayment/online',data = repayment_data,headers = headers)
+    if repayment_result.status_code != 200:
+        print("repayment failed, bidId: ", bid_id)
+    else:
+        print("repayment reject ")
+    third_party_event_data = dict(eventId=str(event_id),companyId=str(company_id),channelId=str(channel_id),mobile=str(mobile),timestamp=str(int(datetime.now().timestamp()*1000)),type='2',scene = "2",status ="1",amount=str(repayment_amout),contractNo=str(bid.contract_no),paymentChannelName="富有",paymentChannelId="2",updateTime=datetime.now().time().strftime("%Y-%m-%d %H:%M:%S"))
+    third_party_event_result = requests.post(constant.SAKE_BASE_URL_LOCAL+"/test/repayment",data = third_party_event_data)
+    if third_party_event_result.status_code != 200:
+        print("third_party_event, bidId: ", bid_id)
+    else:
+        print("repayment success ")
+if __name__ == '__main__':
+    account = 'admin'
+    password = 'admin'
+    event_id = "200_0_18574122156_1556518636786"
+    loan_audit_false(event_id,account,password)
+    print("111")
+    # event_id = '200_0_14579578024_1556515363222'
+    # token = '013f3e0b626303655395efbdacc929ba171a746322b14f5be93d3b61dbd06c91'
+    # repayment(event_id,token)

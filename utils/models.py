@@ -2,7 +2,6 @@ from utils.timezone import change_timezone
 from sqlalchemy import Column, String, create_engine, Integer, DateTime, DECIMAL, TEXT
 from sqlalchemy.orm import sessionmaker
 from sqlalchemy.ext.declarative import declarative_base
-
 # 创建对象的基类:
 Base = declarative_base()
 
@@ -372,6 +371,6 @@ class Bill(Base, TableBase):
 
 # 初始化数据库连接:
 # engine = create_engine("mysql+pymysql://root:Cisco123@10.10.10.200:33061/sake")
-engine = create_engine('mysql+mysqldb://sake_demo:3imZYs7Vgm1EzQKp@rm-bp17kkg9v94pvnmla1o.mysql.rds.aliyuncs.com:3306/staging_sake?charset=utf8')
+engine = create_engine('mysql+pymysql://sake_demo:3imZYs7Vgm1EzQKp@rm-bp17kkg9v94pvnmla1o.mysql.rds.aliyuncs.com:3306/staging_sake?charset=utf8')
 # 创建DBSession类型:
 DBSession = sessionmaker(bind=engine)
