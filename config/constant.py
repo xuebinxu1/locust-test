@@ -13,3 +13,9 @@ ICEWINE_BASE_URL_200 = 'http://10.10.10.200:20610/icewine'
 ICEWINE_BASE_URL_STAGING = 'http://47.98.129.81:20610/icewine'
 
 TEST_OSS_URL = 'http://white-horse.oss-cn-hangzhou.aliyuncs.com'
+
+SAKE_BASE_URL_LOCAL = 'http://localhost:20777/sake'
+SAKE_BASE_URL_STAGING = 'http://47.98.129.81:20777/sake'
+
+ACCOUNT_ADMIN = 'admin'
+PASSWORD_ADMIN = 'admin'

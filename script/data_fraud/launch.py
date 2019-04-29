@@ -3,7 +3,7 @@
 # @Date:    2019/4/24
 from script.data_fraud.data_initial import initial_all_user
 import datetime
-from script.demo.util import registered_and_bid_apply_service
+from script.data_fraud.service import registered_and_bid_apply_service
 from multiprocessing import Process, Manager
 from utils import bid_apply_time
 import time
