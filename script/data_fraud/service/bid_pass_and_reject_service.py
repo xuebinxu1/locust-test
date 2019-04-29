@@ -83,7 +83,8 @@ def sake_login(user,password):
 
     return authorization
 
-def loan_audit_success(event_id,user,password,comment=''):
+
+def loan_audit_success(event_id, user='admin', password='admin', comment=''):
     """
     审核通过
     :param event_id: 事件ID
@@ -103,7 +104,8 @@ def loan_audit_success(event_id,user,password,comment=''):
     else:
         print("granting success ")
 
-def loan_audit_false(event_id,user,password,comment=''):
+
+def loan_audit_false(event_id, user='admin', password='admin', comment=''):
     """
     审核拒件
     :param event_id: 事件ID
@@ -161,6 +163,8 @@ def repayment(event_id,token):
         print("third_party_event, bidId: ", bid_id)
     else:
         print("repayment success ")
+
+
 if __name__ == '__main__':
     account = 'admin'
     password = 'admin'

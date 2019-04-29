@@ -7,6 +7,7 @@ from script.data_fraud.service import registered_and_bid_apply_service
 from multiprocessing import Process, Manager
 from utils import bid_apply_time
 from script.data_fraud.service import autonym_service
+from script.data_fraud.service import bid_pass_and_reject_service
 
 
 def launch():
@@ -14,26 +15,26 @@ def launch():
     启动脚本。
     """
     # 初始化用户数据
-    user_df = initial_all_user()
+    user_df = initial_all_user(True)
     # 初始化Manager字典，用于进程间的数据共享
     with Manager() as manager:
         share_event_id_dict = manager.dict()
         p_list = []
         registered_process = Process(target=registered, args=(user_df, 'registered', share_event_id_dict))
-        # loan_process = Process(target=loan, args=(user_df, 'loan', share_event_id_dict))
-        # reject_process = Process(target=reject, args=(user_df, 'reject', share_event_id_dict))
-        # repayment_process = Process(target=repayment, args=(user_df, 'repayment', share_event_id_dict))
-        # overdue_and_repayment_process = Process(target=overdue_and_repayment, args=(user_df, share_event_id_dict))
+        loan_process = Process(target=loan, args=(user_df, 'loan', share_event_id_dict))
+        reject_process = Process(target=reject, args=(user_df, 'reject', share_event_id_dict))
+        repayment_process = Process(target=repayment, args=(user_df, 'repayment', share_event_id_dict))
+        overdue_and_repayment_process = Process(target=overdue_and_repayment, args=(user_df, share_event_id_dict))
         registered_process.start()
-        # loan_process.start()
-        # reject_process.start()
-        # repayment_process.start()
-        # overdue_and_repayment_process.start()
+        loan_process.start()
+        reject_process.start()
+        repayment_process.start()
+        overdue_and_repayment_process.start()
         p_list.append(registered_process)
-        # p_list.append(loan_process)
-        # p_list.append(reject_process)
-        # p_list.append(repayment_process)
-        # p_list.append(overdue_and_repayment_process)
+        p_list.append(loan_process)
+        p_list.append(reject_process)
+        p_list.append(repayment_process)
+        p_list.append(overdue_and_repayment_process)
         for res in p_list:
             res.join()
         print(share_event_id_dict)
@@ -144,7 +145,7 @@ def loan(df, loan, share_dict=None):
         if start in loan_times_list:
             user_index = user_mapping_dict[start]
             event_id = share_dict[user_index]['event_id']
-            pass
+            bid_pass_and_reject_service.loan_audit_success()
         elif start > largest_time:
             break
         # time.sleep(1)
@@ -177,7 +178,7 @@ def reject(df, reject, share_dict=None):
         if start in reject_times_list:
             user_index = user_mapping_dict[start]
             event_id = share_dict[user_index]['event_id']
-            pass
+            bid_pass_and_reject_service.loan_audit_false(event_id)
         elif start > largest_time:
             break
         # time.sleep(1)
@@ -213,7 +214,7 @@ def repayment(df, repayment, share_dict=None):
             event_id = share_dict[user_index]['event_id']
             token = share_dict[user_index]['token']
             # 还款
-            pass
+            bid_pass_and_reject_service.repayment(event_id, token)
         elif start > largest_time:
             break
         # time.sleep(1)
@@ -259,6 +260,7 @@ def overdue_and_repayment(df, share_dict=None):
             user_index = user_mapping_dict[start]
             event_id = share_dict[user_index]['event_id']
             token = share_dict[user_index]['token']
+            bid_pass_and_reject_service.repayment(event_id, token)
             # 还款
         elif start > largest_time:
             break
